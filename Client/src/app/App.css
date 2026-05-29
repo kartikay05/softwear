@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+/* ─── Autocomplete / Autofill theme-matching ─────────────────────────────── */
+/* Forces browser autofill to match our clean white UI */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #171717 !important;
+  -webkit-box-shadow: 0 0 0px 1000px #fafafa inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* ─── Fade-in entrance animation ─────────────────────────────────────────── */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ─── Smooth page scrolling ──────────────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ─── Focus ring consistency ─────────────────────────────────────────────── */
+*:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
