@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
   {
-    fullName: {
+    name: {
       type: String,
       required: true,
       trim: true,
@@ -22,12 +22,6 @@ const userSchema = new mongoose.Schema(
       default: "https://ik.imagekit.io/krt/boy.png",
     },
 
-    contact: {
-      type: String,
-      default: "",
-      trim: true,
-    },
-
     password: {
       type: String,
       required: function () {
@@ -38,8 +32,50 @@ const userSchema = new mongoose.Schema(
 
     role: {
       type: String,
-      enum: ["Buyer", "Seller", "Admin"],
-      default: "Buyer",
+      enum: ["user", "admin"],
+      default: "user",
+    },
+
+    isBlocked: {
+      type: Boolean,
+      default: false,
+    },
+
+    addresses: [
+      {
+        label: {
+          type: String,
+          trim: true,
+        },
+        street: {
+          type: String,
+          trim: true,
+        },
+        city: {
+          type: String,
+          trim: true,
+        },
+        state: {
+          type: String,
+          trim: true,
+        },
+        pincode: {
+          type: String,
+          trim: true,
+        },
+      },
+    ],
+
+    wishlist: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Product",
+      },
+    ],
+
+    refreshToken: {
+      type: String,
+      select: false,
     },
 
     googleId: {
@@ -52,11 +88,13 @@ const userSchema = new mongoose.Schema(
   },
 );
 
+userSchema.index({ email: 1 }, { unique: true });
+
 // Hash password before saving
 userSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
 
-  this.password = await bcrypt.hash(this.password, 10);
+  this.password = await bcrypt.hash(this.password, 12);
 });
 
 // Compare password method

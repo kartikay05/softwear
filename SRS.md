@@ -1,9 +1,9 @@
 # Software Requirements Specification (SRS)
-# ShopFlow — E-Commerce Platform
+# Softwear — E-Commerce Platform
 
 **Version:** 1.0  
-**Author:** [Your Name]  
-**Date:** 2025  
+**Author:** [Kartikay]  
+**Date:** 2026  
 **Status:** In Development
 
 ---
@@ -26,11 +26,11 @@
 
 ### 1.1 Purpose
 
-This document describes the software requirements for **ShopFlow**, a production-grade full-stack e-commerce web application. It serves as a reference for development decisions, feature scope, and system design.
+This document describes the software requirements for **Softwear**, a production-grade full-stack e-commerce web application. It serves as a reference for development decisions, feature scope, and system design.
 
 ### 1.2 Project Scope
 
-ShopFlow is a complete online shopping platform with two primary interfaces:
+Softwear is a complete online shopping platform with two primary interfaces:
 
 - **Customer Interface** — Browse products, manage cart, checkout with online payment, track orders
 - **Admin Interface** — Manage products and inventory, process orders, analyze business metrics via charts
@@ -47,7 +47,7 @@ ShopFlow is a complete online shopping platform with two primary interfaces:
 | Authentication | JWT (access + refresh) | Stateless auth |
 | OAuth | Google OAuth 2.0 | Social login |
 | Payments | Razorpay | Payment gateway |
-| File Storage | Cloudinary | Product image storage |
+| File Storage | ImageKit | Product image storage |
 | Email | Nodemailer (Gmail SMTP) | Transactional emails |
 | Deployment | Vercel + Render + MongoDB Atlas | Cloud deployment |
 
@@ -57,7 +57,7 @@ ShopFlow is a complete online shopping platform with two primary interfaces:
 
 ### 2.1 Product Perspective
 
-ShopFlow is a standalone web application accessible via any modern browser. It follows a client-server architecture where the React frontend communicates with the Express.js backend through a RESTful API. MongoDB Atlas is used as a cloud-hosted database.
+Softwear is a standalone web application accessible via any modern browser. It follows a client-server architecture where the React frontend communicates with the Express.js backend through a RESTful API. MongoDB Atlas is used as a cloud-hosted database.
 
 ### 2.2 User Roles
 
@@ -150,9 +150,9 @@ User clicks Pay
 | ID | Requirement |
 |---|---|
 | PRD-01 | Products have: name, description, price, discount price, images, category, brand, stock count |
-| PRD-02 | Admin can create products with multiple image uploads (stored on Cloudinary) |
+| PRD-02 | Admin can create products with multiple image uploads (stored on ImageKit) |
 | PRD-03 | Admin can update product details and replace images |
-| PRD-04 | Admin can delete a product (images removed from Cloudinary) |
+| PRD-04 | Admin can delete a product (images removed from ImageKit) |
 | PRD-05 | Customers can browse all products with pagination (12 per page) |
 | PRD-06 | Products can be filtered by category, price range, and minimum rating |
 | PRD-07 | Products can be sorted by price (low/high), newest, and most popular |
@@ -248,7 +248,7 @@ User clicks Pay
 
 - API responses should return within 500ms under normal load
 - Product list page should load within 2 seconds (with pagination)
-- Images served via Cloudinary CDN for fast global delivery
+- Images served via ImageKit CDN for fast global delivery
 
 ### 5.2 Security
 
@@ -370,7 +370,7 @@ Order ──< Coupon
 | Frontend | Vercel | Auto-deploy from GitHub `main` branch |
 | Backend API | Render (Web Service) | Node 18, add all .env vars in dashboard |
 | Database | MongoDB Atlas | M0 free cluster, IP whitelist: 0.0.0.0/0 |
-| Image Storage | Cloudinary | Free tier (25 GB storage, 25 GB bandwidth/month) |
+| Image Storage | ImageKit | Free tier (25 GB storage, 25 GB bandwidth/month) |
 | Email | Gmail SMTP | App Password via Google Account settings |
 | Payments | Razorpay | Test keys for dev, live keys for production |
 
@@ -379,7 +379,7 @@ Order ──< Coupon
 ```
 PORT, MONGO_URI, JWT_ACCESS_SECRET, JWT_REFRESH_SECRET,
 GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
-CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET,
+IMAGEKIT_PUBLIC_KEY, IMAGEKIT_PRIVATE_KEY, IMAGEKIT_URL_ENDPOINT,
 RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET,
 EMAIL_USER, EMAIL_PASS, CLIENT_URL
 ```
@@ -393,4 +393,4 @@ EMAIL_USER, EMAIL_PASS, CLIENT_URL
 
 ---
 
-*ShopFlow SRS — Version 1.0*
+*Softwear SRS — Version 1.0*

@@ -1,54 +1,51 @@
-# ShopFlow — Task Tracker
+# Softwear — Task Tracker
 
 > **Legend:** `[ ]` Todo &nbsp;|&nbsp; `[~]` In Progress &nbsp;|&nbsp; `[x]` Done &nbsp;|&nbsp; `[!]` Blocked
 
 ---
 
 ## Phase 1 — Backend Restructure + Core APIs
-**Target: Week 1-2**
 
 ### 1.1 Project Setup & Config
-- [ ] Clean up existing folder structure as per PROJECT_OVERVIEW.md
-- [ ] Setup `server.js` with Express, CORS, cookie-parser, morgan
-- [ ] Setup `config/db.js` — MongoDB Atlas connection with error handling
-- [ ] Setup `config/cloudinary.js`
-- [ ] Setup `config/razorpay.js`
-- [ ] Create `.env.example` file
-- [ ] Setup global error handler middleware (`middlewares/errorMiddleware.js`)
-- [ ] Setup `utils/apiFeatures.js` — reusable filter, sort, pagination class
+- [x] Clean up existing folder structure as per PROJECT_OVERVIEW.md
+- [x] Setup `server.js` with Express, CORS, cookie-parser, morgan
+- [x] Setup `config/db.js` — MongoDB Atlas connection with error handling
+- [x] Create `.env.example` file
+- [x] Setup global error handler middleware (`middlewares/errorMiddleware.js`)
+- [x] Setup `utils/apiFeatures.js` — reusable filter, sort, pagination class
 
 ### 1.2 Auth (Refactor Existing)
-- [ ] Refactor register/login controllers — clean response format `{ success, data, message }`
-- [ ] Implement access token (15min) + refresh token (7 days) in httpOnly cookie
-- [ ] Add `POST /api/auth/refresh-token` endpoint
-- [ ] Add `POST /api/auth/logout` — clear cookies
-- [ ] Refactor Google OAuth flow
-- [ ] Write `authMiddleware.js` — `verifyToken`
-- [ ] Write `roleMiddleware.js` — `isAdmin`
+- [x] Refactor register/login controllers — clean response format `{ success, data, message }`
+- [x] Implement access token (15min) + refresh token (7 days) in httpOnly cookie
+- [x] Add `POST /api/auth/refresh-token` endpoint
+- [x] Add `POST /api/auth/logout` — clear cookies
+- [x] Refactor Google OAuth flow
+- [x] Write `authMiddleware.js` — `verifyToken`
+- [x] Write `roleMiddleware.js` — `isAdmin`
 
 ### 1.3 Product API
-- [ ] Create `Product` Mongoose model
-- [ ] `POST /api/products` — create product with image upload (Cloudinary) [Admin]
-- [ ] `GET /api/products` — list with search, category filter, price range, sort, pagination
-- [ ] `GET /api/products/:id` — single product with populated reviews
-- [ ] `PUT /api/products/:id` — update product, handle image replace [Admin]
-- [ ] `DELETE /api/products/:id` — delete product + remove images from Cloudinary [Admin]
-- [ ] Setup `uploadMiddleware.js` using multer + cloudinary storage
+- [x] Create `Product` Mongoose model
+- [x] `POST /api/products` — create product with image upload (Imagekit) [Admin]
+- [x] `GET /api/products` — list with search, category filter, price range, sort, pagination
+- [x] `GET /api/products/:id` — single product with populated reviews
+- [x] `PUT /api/products/:id` — update product, handle image replace [Admin]
+- [x] `DELETE /api/products/:id` — delete product + remove images from Imagekit [Admin]
+- [x] Setup `uploadMiddleware.js` using multer + Imagekit storage
 
 ### 1.4 Cart API
-- [ ] Create `Cart` Mongoose model
-- [ ] `POST /api/cart/add` — add item, if exists increase quantity
-- [ ] `GET /api/cart` — get user's cart with populated product details
-- [ ] `PUT /api/cart/update` — update item quantity
-- [ ] `DELETE /api/cart/remove/:itemId` — remove single item
-- [ ] `DELETE /api/cart/clear` — clear entire cart
+- [x] Create `Cart` Mongoose model
+- [x] `POST /api/cart/add` — add item, if exists increase quantity
+- [x] `GET /api/cart` — get user's cart with populated product details
+- [x] `PUT /api/cart/update` — update item quantity
+- [x] `DELETE /api/cart/remove/:itemId` — remove single item
+- [x] `DELETE /api/cart/clear` — clear entire cart
 
 ### 1.5 Order API
-- [ ] Create `Order` Mongoose model
-- [ ] `POST /api/orders` — create order from cart, reduce product stock
-- [ ] `GET /api/orders/my-orders` — paginated order history for logged-in user
-- [ ] `GET /api/orders/:id` — order detail
-- [ ] `PUT /api/orders/:id/cancel` — cancel if status is pending/processing
+- [x] Create `Order` Mongoose model
+- [x] `POST /api/orders` — create order from cart, reduce product stock
+- [x] `GET /api/orders/my-orders` — paginated order history for logged-in user
+- [x] `GET /api/orders/:id` — order detail
+- [x] `PUT /api/orders/:id/cancel` — cancel if status is pending/processing
 
 ### 1.6 Payment (Razorpay)
 - [ ] `POST /api/payment/create-order` — create Razorpay order, return order_id
@@ -60,7 +57,7 @@
 ---
 
 ## Phase 2 — React Frontend (User Side)
-**Target: Week 3**
+**will do that later first finish backend properly**
 
 ### 2.1 Setup & Config
 - [ ] Setup Axios instance with base URL + interceptors (attach token, handle 401)
@@ -171,7 +168,6 @@
 ---
 
 ## Phase 5 — Final Polish & Deployment
-**Target: Week 7**
 
 ### 5.1 Code Quality
 - [ ] Add input validation on all routes (express-validator or zod)

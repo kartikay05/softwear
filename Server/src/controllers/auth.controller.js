@@ -1,115 +1,128 @@
 import jwt from "jsonwebtoken";
 import userModel from "../models/user.model.js";
 import config from "../config/config.js";
+import ApiError from "../utils/apiError.js";
+import sendResponse from "../utils/sendResponse.js";
+import {
+  clearRefreshTokenCookie,
+  generateAccessToken,
+  generateRefreshToken,
+  setRefreshTokenCookie,
+} from "../utils/jwt.js";
 
-/**
- * Generates JWT token and sets it as an HTTP-only cookie.
- * @param {Object} user - User document
- * @param {Object} res - Express response object
- * @returns {String} Signed JWT token
- */
-function generateTokenAndSetCookie(user, res) {
-  const token = jwt.sign(
-    { id: user._id, email: user.email },
-    config.JWT_SECRET,
-    { expiresIn: "7d" }
-  );
-
-  res.cookie("token", token, {
-    httpOnly: true,
-    secure: config.NODE_ENV === "production",
-    sameSite: "strict",
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-  });
-
-  return token;
+function serializeUser(user) {
+  return {
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    avatar: user.avatar,
+    isBlocked: user.isBlocked,
+  };
 }
 
-/**
- * Helper to send successful authentication response with user data.
- */
-async function sendTokenResponse(user, res, message) {
-  generateTokenAndSetCookie(user, res);
+async function issueAuthTokens(user, res) {
+  const accessToken = generateAccessToken(user);
+  const refreshToken = generateRefreshToken(user);
 
-  res.status(200).json({
-    success: true,
-    message,
-    user: {
-      id: user._id,
-      email: user.email,
-      contact: user.contact,
-      fullName: user.fullName,
-      role: user.role || "Buyer",
-      avatar: user.avatar,
-    },
-  });
+  user.refreshToken = refreshToken;
+  await user.save({ validateBeforeSave: false });
+  setRefreshTokenCookie(res, refreshToken);
+
+  return accessToken;
 }
 
-/**
- * Register a new user (Buyer or Seller)
- */
-export async function register(req, res) {
-  const { fullName, email, password, contact, isSeller } = req.body;
-
+export async function register(req, res, next) {
   try {
-    const queryConditions = [{ email }];
-    if (contact) queryConditions.push({ contact });
+    const { name, fullName, email, password } = req.body;
+    const displayName = name || fullName;
 
-    const isUserExists = await userModel.findOne({
-      $or: queryConditions,
-    });
-
-    if (isUserExists) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "User with this email or contact number already exists" 
-      });
+    const existingUser = await userModel.findOne({ email });
+    if (existingUser) {
+      return next(new ApiError(409, "User with this email already exists"));
     }
 
     const user = await userModel.create({
-      fullName,
+      name: displayName,
       email,
       password,
-      contact: contact || "",
-      role: isSeller ? "Seller" : "Buyer",
     });
 
-    await sendTokenResponse(user, res, "User registered successfully");
+    const accessToken = await issueAuthTokens(user, res);
+
+    return sendResponse(res, 201, "User registered successfully", {
+      user: serializeUser(user),
+      accessToken,
+    });
   } catch (error) {
-    console.error("Error during registration:", error);
-    return res.status(500).json({ success: false, message: "Internal server error" });
+    next(error);
   }
 }
 
-/**
- * Log in an existing user
- */
-export async function login(req, res) {
-  const { email, password } = req.body;
+export async function login(req, res, next) {
   try {
-    const user = await userModel.findOne({ email }).select("+password");
+    const { email, password } = req.body;
+
+    const user = await userModel.findOne({ email }).select("+password +refreshToken");
     if (!user) {
-      return res.status(400).json({ success: false, message: "Invalid email or password" });
+      return next(new ApiError(400, "Invalid email or password"));
+    }
+
+    if (user.isBlocked) {
+      return next(new ApiError(403, "Your account has been blocked"));
     }
 
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
-      return res.status(400).json({ success: false, message: "Invalid email or password" });
+      return next(new ApiError(400, "Invalid email or password"));
     }
 
-    await sendTokenResponse(user, res, "User logged in successfully");
+    const accessToken = await issueAuthTokens(user, res);
+
+    return sendResponse(res, 200, "User logged in successfully", {
+      user: serializeUser(user),
+      accessToken,
+    });
   } catch (error) {
-    console.error("Error during login:", error);
-    return res.status(500).json({ success: false, message: "Internal server error" });
+    next(error);
   }
 }
 
-/**
- * Google OAuth Callback
- * Logs in the user if they already exist (linking their accounts if needed),
- * or creates a new user if they do not exist.
- */
-export async function googleCallback(req, res) {
+export async function refreshToken(req, res, next) {
+  try {
+    const token = req.cookies.refreshToken;
+    if (!token) {
+      return next(new ApiError(401, "Refresh token is missing"));
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, config.JWT_REFRESH_SECRET);
+    } catch (error) {
+      return next(new ApiError(401, "Invalid or expired refresh token"));
+    }
+
+    const user = await userModel.findById(decoded.id).select("+refreshToken");
+    if (!user || user.refreshToken !== token) {
+      return next(new ApiError(401, "Refresh token is invalid"));
+    }
+
+    if (user.isBlocked) {
+      return next(new ApiError(403, "Your account has been blocked"));
+    }
+
+    const accessToken = await issueAuthTokens(user, res);
+
+    return sendResponse(res, 200, "Access token refreshed successfully", {
+      user: serializeUser(user),
+      accessToken,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function googleCallback(req, res, next) {
   try {
     if (!req.user) {
       return res.redirect(`${config.CLIENT_URL}/login?error=NoUserFromGoogle`);
@@ -123,79 +136,54 @@ export async function googleCallback(req, res) {
       return res.redirect(`${config.CLIENT_URL}/login?error=EmailRequired`);
     }
 
-    let user = await userModel.findOne({ email });
+    let user = await userModel.findOne({ email }).select("+refreshToken");
 
     if (user) {
-      // User exists - link Google ID and avatar if needed
-      let updated = false;
-      if (!user.googleId) {
-        user.googleId = id;
-        updated = true;
+      if (user.isBlocked) {
+        return res.redirect(`${config.CLIENT_URL}/login?error=AccountBlocked`);
       }
-      if (photo && (!user.avatar || user.avatar.includes("flaticon.com"))) {
-        user.avatar = photo;
-        updated = true;
-      }
-      if (updated) {
-        await user.save();
-      }
+
+      user.googleId = user.googleId || id;
+      user.avatar = photo || user.avatar;
+      await user.save({ validateBeforeSave: false });
     } else {
-      // Create new user
       user = await userModel.create({
         email,
         googleId: id,
-        fullName: displayName || "Google User",
-        avatar: photo || "https://cdn-icons-png.flaticon.com/512/149/149071.png",
-        role: "Buyer",
+        name: displayName || "Google User",
+        avatar: photo || undefined,
       });
     }
 
-    generateTokenAndSetCookie(user, res);
-    res.redirect(config.CLIENT_URL);
+    const accessToken = await issueAuthTokens(user, res);
+    const redirectUrl = new URL(config.CLIENT_URL);
+    redirectUrl.searchParams.set("accessToken", accessToken);
+    res.redirect(redirectUrl.toString());
   } catch (error) {
-    console.error("Error inside googleCallback:", error);
-    res.redirect(`${config.CLIENT_URL}/login?error=OAuthFailed`);
+    next(error);
   }
 }
 
-/**
- * Get the currently logged-in user profile
- */
 export async function getProfile(req, res) {
-  const user = req.user;
-  if (!user) {
-    return res.status(401).json({ success: false, message: "User profile not found" });
-  }
-
-  res.status(200).json({
-    success: true,
-    message: "User profile fetched successfully",
-    user: {
-      id: user._id,
-      email: user.email,
-      contact: user.contact,
-      fullName: user.fullName,
-      role: user.role,
-      avatar: user.avatar,
-    },
+  return sendResponse(res, 200, "User profile fetched successfully", {
+    user: serializeUser(req.user),
   });
 }
 
-/**
- * Log out a user by clearing their cookies
- */
-export async function logout(req, res) {
+export async function logout(req, res, next) {
   try {
-    res.clearCookie("token", {
-      httpOnly: true,
-      secure: config.NODE_ENV === "production",
-      sameSite: "strict",
-    });
-    res.status(200).json({ success: true, message: "User logged out successfully" });
+    const token = req.cookies.refreshToken;
+
+    if (token) {
+      await userModel.findOneAndUpdate(
+        { refreshToken: token },
+        { $unset: { refreshToken: 1 } }
+      );
+    }
+
+    clearRefreshTokenCookie(res);
+    return sendResponse(res, 200, "User logged out successfully");
   } catch (error) {
-    console.error("Error during logout:", error);
-    return res.status(500).json({ success: false, message: "Internal server error" });
+    next(error);
   }
 }
-
-

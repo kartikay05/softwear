@@ -1,61 +1,90 @@
 import mongoose from "mongoose";
-import priceSchema from "./price.schema.js";
 
-const productSchema = new mongoose.Schema({
-    title: {
-        type: String,
-        required: true,
-        trim: true,
+const productImageSchema = new mongoose.Schema(
+    {
+        url: {
+            type: String,
+            required: true,
+        },
+        publicId: {
+            type: String,
+            required: true,
+        },
     },
-    description: {
-        type: String,
-        required: true,
-    },
-    seller: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'user',
-        required: true,
-    },
-    price: {
-        type: priceSchema,
-        required: true
-    },
-    images: [
-        {
-            url: {
-                type: String,
-                required: true
-            }
-        }
-    ],
-    variant: [
-        {
-            images: [
-                {
-                    url: {
-                        type: String,
-                        required: true
-                    }
-                }
-            ],
-            stock: {
+    { _id: false }
+);
+
+const productSchema = new mongoose.Schema(
+    {
+        name: {
+            type: String,
+            required: true,
+            trim: true,
+            index: "text",
+        },
+        description: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        price: {
+            type: Number,
+            required: true,
+            min: 0,
+        },
+        discountPrice: {
+            type: Number,
+            min: 0,
+            default: null,
+        },
+        images: [productImageSchema],
+        category: {
+            type: String,
+            required: true,
+            trim: true,
+            index: true,
+        },
+        brand: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        stock: {
+            type: Number,
+            required: true,
+            min: 0,
+            default: 0,
+        },
+        sold: {
+            type: Number,
+            min: 0,
+            default: 0,
+        },
+        ratings: {
+            average: {
                 type: Number,
-                default: 0
+                min: 0,
+                max: 5,
+                default: 0,
             },
-            attributes: {
-                type: Map,
-                of: String
+            count: {
+                type: Number,
+                min: 0,
+                default: 0,
             },
-            price: {
-                type: priceSchema,
-                required: true,
-            }
-        }
-    ]
+        },
+        isFeatured: {
+            type: Boolean,
+            default: false,
+        },
+    },
+    {
+        timestamps: true,
+    }
+);
 
-}, {
-    timestamps: true
-});
+productSchema.index({ name: "text", description: "text", brand: "text" });
 
-const productModel = mongoose.model("product", productSchema);
+const productModel = mongoose.model("Product", productSchema);
+
 export default productModel;

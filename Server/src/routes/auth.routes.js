@@ -1,15 +1,17 @@
 import { Router } from "express";
-import { getProfile, googleCallback, login, logout, register } from "../controllers/auth.controller.js";
+import { getProfile, googleCallback, login, logout, refreshToken, register } from "../controllers/auth.controller.js";
 import { loginValidator, registerValidator } from "../validator/auth.validator.js";
 import passport from "passport";
 import config from "../config/config.js";
-import { authenticatedUser } from "../middlewares/auth.middleware.js";
+import { verifyToken } from "../middlewares/auth.middleware.js";
 
 const authRouter = Router();
 
 // auth routes
 authRouter.post("/register", registerValidator, register);
 authRouter.post("/login", loginValidator, login);
+authRouter.post("/refresh-token", refreshToken);
+authRouter.post("/logout", logout);
 
 // google auth routes
 /* 
@@ -31,9 +33,6 @@ authRouter.get("/google/callback",
 
 
 // profile route
-authRouter.get("/profile", authenticatedUser, getProfile);
-
-// logout route
-authRouter.get("/logout", authenticatedUser, logout);
+authRouter.get("/profile", verifyToken, getProfile);
 
 export default authRouter;

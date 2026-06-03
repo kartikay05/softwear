@@ -1,34 +1,69 @@
-import { body, validationResult } from 'express-validator'
+import { body, param, validationResult } from "express-validator";
+import ApiError from "../utils/apiError.js";
 
 function validateRequest(req, res, next) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(400).json({ message: "Validation error", errors: errors.array() });
+        return next(new ApiError(400, "Validation error", errors.array()));
     }
 
     next();
 }
 
 export const createProductValidator = [
-    body("title").notEmpty().withMessage("Title is required"),
-    body("description").notEmpty().withMessage("Description is required"),
-    body("priceAmount").notEmpty().withMessage("Price amount is required").isNumeric().withMessage("Price amount must be a number"),
-    body("priceCurrency").notEmpty().withMessage("Currency is required"),
-    body("images").notEmpty().withMessage("Images are required"),
-    body("variant").notEmpty().withMessage("Variant is required"),
-    validateRequest
-]
+    body("name").trim().notEmpty().withMessage("Product name is required"),
+    body("description").trim().notEmpty().withMessage("Description is required"),
+    body("price")
+        .notEmpty()
+        .withMessage("Price is required")
+        .isFloat({ min: 0 })
+        .withMessage("Price must be a positive number"),
+    body("discountPrice")
+        .optional({ nullable: true, checkFalsy: true })
+        .isFloat({ min: 0 })
+        .withMessage("Discount price must be a positive number"),
+    body("category").trim().notEmpty().withMessage("Category is required"),
+    body("brand").trim().notEmpty().withMessage("Brand is required"),
+    body("stock")
+        .notEmpty()
+        .withMessage("Stock is required")
+        .isInt({ min: 0 })
+        .withMessage("Stock must be a positive integer"),
+    body("isFeatured")
+        .optional()
+        .isBoolean()
+        .withMessage("isFeatured must be true or false")
+        .toBoolean(),
+    validateRequest,
+];
 
 export const updateProductValidator = [
-    body("title").optional().withMessage("Title is required"),
-    body("description").optional().withMessage("Description is required"),
-    body("price").optional().withMessage("Price is required"),
-    body("images").optional().withMessage("Images are required"),
-    body("variant").optional().withMessage("Variant is required"),
-    validateRequest
-]
+    param("id").isMongoId().withMessage("Invalid product ID"),
+    body("name").optional().trim().notEmpty().withMessage("Product name cannot be empty"),
+    body("description").optional().trim().notEmpty().withMessage("Description cannot be empty"),
+    body("price")
+        .optional()
+        .isFloat({ min: 0 })
+        .withMessage("Price must be a positive number"),
+    body("discountPrice")
+        .optional({ nullable: true, checkFalsy: true })
+        .isFloat({ min: 0 })
+        .withMessage("Discount price must be a positive number"),
+    body("category").optional().trim().notEmpty().withMessage("Category cannot be empty"),
+    body("brand").optional().trim().notEmpty().withMessage("Brand cannot be empty"),
+    body("stock")
+        .optional()
+        .isInt({ min: 0 })
+        .withMessage("Stock must be a positive integer"),
+    body("isFeatured")
+        .optional()
+        .isBoolean()
+        .withMessage("isFeatured must be true or false")
+        .toBoolean(),
+    validateRequest,
+];
 
-export const deleteProductValidator = [
-    body("id").notEmpty().withMessage("Product ID is required"),
-    validateRequest
-]
+export const productIdValidator = [
+    param("id").isMongoId().withMessage("Invalid product ID"),
+    validateRequest,
+];

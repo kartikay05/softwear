@@ -1,34 +1,45 @@
-import {body, param, validationResult} from 'express-validator';
+import { body, param, validationResult } from "express-validator";
+import ApiError from "../utils/apiError.js";
 
 function validateRequest(req, res, next) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(400).json({ message: "Validation error", errors: errors.array() });
+        return next(new ApiError(400, "Validation error", errors.array()));
     }
+
     next();
 }
 
 export const addToCartValidator = [
-    body("productId").notEmpty().withMessage("Product ID is required").isMongoId().withMessage("Invalid Product ID"),
-    body("variantId").optional().isMongoId().withMessage("Invalid Variant ID"),
-    body("quantity").optional().isInt({min:1}).withMessage("Quantity must be at least 1"),
-    validateRequest
-]
+    body("productId")
+        .notEmpty()
+        .withMessage("Product ID is required")
+        .isMongoId()
+        .withMessage("Invalid product ID"),
+    body("quantity")
+        .optional()
+        .isInt({ min: 1 })
+        .withMessage("Quantity must be at least 1"),
+    validateRequest,
+];
 
-export const removeFromCartValidator = [
-    body("productId").notEmpty().withMessage("Product ID is required").isMongoId().withMessage("Invalid Product ID"),
-    body("variantId").optional().isMongoId().withMessage("Invalid Variant ID"),
-    validateRequest
-]
+export const updateCartItemValidator = [
+    body("productId")
+        .notEmpty()
+        .withMessage("Product ID is required")
+        .isMongoId()
+        .withMessage("Invalid product ID"),
+    body("quantity")
+        .notEmpty()
+        .withMessage("Quantity is required")
+        .isInt({ min: 1 })
+        .withMessage("Quantity must be at least 1"),
+    validateRequest,
+];
 
-export const incrementCartItemValidator = [
-    body("productId").notEmpty().withMessage("Product ID is required").isMongoId().withMessage("Invalid Product ID"),
-    body("variantId").optional().isMongoId().withMessage("Invalid Variant ID"),
-    validateRequest
-]
-
-export const decrementCartItemValidator = [
-    body("productId").notEmpty().withMessage("Product ID is required").isMongoId().withMessage("Invalid Product ID"),
-    body("variantId").optional().isMongoId().withMessage("Invalid Variant ID"),
-    validateRequest
-]
+export const removeCartItemValidator = [
+    param("itemId")
+        .isMongoId()
+        .withMessage("Invalid cart item ID"),
+    validateRequest,
+];
