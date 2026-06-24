@@ -1,4 +1,4 @@
-# ShopFlow — E-commerce Platform
+# Softwear — E-commerce Platform
 ## Project Overview for AI Agent
 
 ---
@@ -7,7 +7,7 @@
 
 A **production-grade, full-stack E-commerce web application** built with the MERN stack (MongoDB, Express.js, React, Node.js). This is not a tutorial project — it is designed to reflect real-world engineering standards with a scalable backend, role-based access, payment integration, and a full admin analytics dashboard.
 
-**Project Name:** ShopFlow  
+**Project Name:** Softwear  
 **Type:** Full Stack Web Application  
 **Stack:** MERN (MongoDB, Express, React, Node.js)  
 **Purpose:** Portfolio project to demonstrate senior-level MERN development for job applications
@@ -21,7 +21,7 @@ The developer has already built the following:
 **Backend (Node.js + Express):**
 - User Auth — Register, Login with JWT
 - Google OAuth ("Continue with Google")
-- Cloudinary image upload utility
+- Imagekit image upload utility
 - Basic Product and Cart API routes (need restructuring)
 
 **Frontend (React + Redux Toolkit):**
@@ -48,7 +48,7 @@ The developer has already built the following:
 | Database | MongoDB + Mongoose |
 | Auth | JWT (access + refresh tokens), Google OAuth |
 | Payments | Razorpay (payment + webhook + refunds) |
-| File Storage | Cloudinary |
+| File Storage | Imagekit |
 | Email | Nodemailer + Gmail SMTP |
 | Deployment | Vercel (frontend), Render (backend), MongoDB Atlas (DB) |
 
@@ -57,7 +57,7 @@ The developer has already built the following:
 ## Folder Structure
 
 ```
-shopflow/
+Softwear/
 ├── client/                          # React Frontend
 │   ├── public/
 │   └── src/
@@ -101,8 +101,7 @@ shopflow/
 ├── server/
 │   ├── config/
 │   │   ├── db.js                    # MongoDB connection
-│   │   ├── cloudinary.js
-│   │   └── razorpay.js
+│   │   |-- config.js
 │   ├── controllers/
 │   │   ├── authController.js
 │   │   ├── productController.js
@@ -113,30 +112,32 @@ shopflow/
 │   │   ├── couponController.js
 │   │   └── adminController.js
 │   ├── models/
-│   │   ├── User.js
-│   │   ├── Product.js
-│   │   ├── Cart.js
-│   │   ├── Order.js
-│   │   ├── Review.js
-│   │   └── Coupon.js
+│   │   ├── User.model.js
+│   │   ├── Product.model.js
+│   │   ├── Cart.model.js
+│   │   ├── Order.model.js
+│   │   ├── Review.model.js
+│   │   └── Coupon.model.js
 │   ├── routes/
-│   │   ├── authRoutes.js
-│   │   ├── productRoutes.js
-│   │   ├── cartRoutes.js
-│   │   ├── orderRoutes.js
-│   │   ├── paymentRoutes.js
-│   │   ├── reviewRoutes.js
-│   │   ├── couponRoutes.js
-│   │   └── adminRoutes.js
+│   │   ├── auth.routes.js
+│   │   ├── product.routes.js
+│   │   ├── cart.routes.js
+│   │   ├── order.routes.js
+│   │   ├── payment.routes.js
+│   │   ├── review.routes.js
+│   │   ├── coupon.routes.js
+│   │   └── admin.routes.js
 │   ├── middlewares/
-│   │   ├── authMiddleware.js        # verifyToken
-│   │   ├── roleMiddleware.js        # isAdmin
-│   │   ├── errorMiddleware.js       # global error handler
-│   │   └── uploadMiddleware.js      # multer + cloudinary
+│   │   ├── auth.middleware.js        # verifyToken
+│   │   ├── role.middleware.js        # isAdmin
+│   │   ├── error.middleware.js       # global error handler
+│   │   └── upload.middleware.js      # multer + imagekit
 │   ├── utils/
-│   │   ├── sendEmail.js
-│   │   ├── generateToken.js
-│   │   └── apiFeatures.js           # filter, sort, paginate helper
+│   │   ├── storage.js               # imagekit + multer
+│   │   ├── payment.js               # razorpay + webhook
+│   │   ├── email.js                 # nodemailer
+│   │   ├── jwt.js                   # generateToken
+│   │   └── features.js              # filter, sort, paginate helper
 │   └── server.js
 │
 ├── .env
@@ -287,9 +288,9 @@ JWT_ACCESS_SECRET=
 JWT_REFRESH_SECRET=
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
-CLOUDINARY_CLOUD_NAME=
-CLOUDINARY_API_KEY=
-CLOUDINARY_API_SECRET=
+IMAGEKIT_PRIVATE_KEY=
+IMAGEKIT_PUBLIC_KEY=
+IMAGEKIT_URL_ENDPOINT=
 RAZORPAY_KEY_ID=
 RAZORPAY_KEY_SECRET=
 RAZORPAY_WEBHOOK_SECRET=
@@ -307,4 +308,4 @@ CLIENT_URL=http://localhost:5173
 | Frontend | Vercel | Auto-deploy from GitHub main branch |
 | Backend | Render (free tier) | Web service, add all env vars |
 | Database | MongoDB Atlas | Free M0 cluster |
-| Images | Cloudinary | Free tier (25GB) |
+| Images | ImageKit | Free tier (25GB) |

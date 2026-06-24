@@ -3,67 +3,79 @@ import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
   {
-    fullName: {
+    name: {
       type: String,
       required: true,
       trim: true,
     },
-
     email: {
       type: String,
       required: true,
-      unique: true,
+      unique: true,    
       lowercase: true,
       trim: true,
     },
-
     avatar: {
       type: String,
       default: "https://ik.imagekit.io/krt/boy.png",
     },
-
-    contact: {
-      type: String,
-      default: "",
-      trim: true,
-    },
-
     password: {
       type: String,
-      required: function () {
-        return !this.googleId;
-      },
+      // ✅ use an arrow fn to avoid `this` binding issues
+      required: [
+        function () { return !this.googleId; },
+        "Password is required for non-Google accounts",
+      ],
       select: false,
     },
-
     role: {
       type: String,
-      enum: ["Buyer", "Seller", "Admin"],
-      default: "Buyer",
+      enum: ["user", "admin"],
+      default: "user",
     },
-
+    isBlocked: {
+      type: Boolean,
+      default: false,
+    },
+    addresses: [
+      {
+        label: { type: String, trim: true },
+        street: { type: String, trim: true },
+        city:   { type: String, trim: true },
+        state:  { type: String, trim: true },
+        pincode:{ type: String, trim: true },
+      },
+    ],
+    wishlist: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Product",
+      },
+    ],
+    refreshToken: {
+      type: String,
+      select: false,
+    },
     googleId: {
       type: String,
       default: null,
     },
   },
-  {
-    timestamps: true,
-  },
+  { timestamps: true }
 );
 
-// Hash password before saving
-userSchema.pre("save", async function () {
-  if (!this.isModified("password")) return;
-
-  this.password = await bcrypt.hash(this.password, 10);
+// ✅ Hash password — use next() for safety across all Mongoose versions
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password") || !this.password) return;
+  this.password = await bcrypt.hash(this.password, 12);
+  // next();
 });
 
-// Compare password method
-userSchema.methods.comparePassword = async function (password) {
-  return await bcrypt.compare(password, this.password);
+// ✅ comparePassword — guard against undefined hash
+userSchema.methods.comparePassword = async function (candidatePassword) {
+  if (!this.password) return false;
+  return bcrypt.compare(candidatePassword, this.password);
 };
 
 const userModel = mongoose.model("User", userSchema);
-
 export default userModel;

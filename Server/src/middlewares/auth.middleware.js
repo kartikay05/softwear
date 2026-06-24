@@ -1,74 +1,53 @@
 import jwt from "jsonwebtoken";
 import config from "../config/config.js";
 import userModel from "../models/user.model.js";
+import ApiError from "../utils/apiError.js";
 
-/**
- * Middleware to authenticate any logged-in user.
- * Validates JWT token from cookies or authorization header.
- */
-export async function authenticatedUser(req, res, next) {
-    try {
-        const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
-        if (!token) {
-            return res.status(401).json({ success: false, message: "Authentication token is missing" });
-        }
-
-        let decoded;
-        try {
-            decoded = jwt.verify(token, config.JWT_SECRET);
-        } catch (jwtErr) {
-            return res.status(401).json({ 
-                success: false, 
-                message: jwtErr.name === "TokenExpiredError" ? "Token expired" : "Invalid token" 
-            });
-        }
-
-        const user = await userModel.findById(decoded.id);
-        if (!user) {
-            return res.status(401).json({ success: false, message: "User not found" });
-        }
-
-        req.user = user;
-        next();
-    } catch (error) {
-        console.error("Error during authentication middleware:", error);
-        return res.status(500).json({ success: false, message: "Internal server error" });
+export async function verifyToken(req, res, next) {
+  try {
+    const authHeader = req.headers.authorization;
+    // Try to get token from Authorization header first
+    let token = authHeader && authHeader.startsWith("Bearer ")
+      ? authHeader.split(" ")[1]
+      : null;
+    // Fallback: check access token stored in cookies (requires cookie-parser middleware)
+    if (!token && req.cookies && req.cookies.accessToken) {
+      token = req.cookies.accessToken;
     }
+
+    if (!token) {
+      return next(new ApiError(401, "Access token is missing"));
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, config.JWT_ACCESS_SECRET);
+    } catch (jwtErr) {
+      return next(
+        new ApiError(
+          401,
+          jwtErr.name === "TokenExpiredError"
+            ? "Access token expired"
+            : "Invalid access token"
+        )
+      );
+    }
+
+    // ✅ Only hit DB if you need live isBlocked check — skip if low-risk routes
+    const user = await userModel.findById(decoded.id).select("-refreshToken");
+    if (!user) {
+      return next(new ApiError(401, "User not found"));
+    }
+
+    if (user.isBlocked) {
+      return next(new ApiError(403, "Your account has been blocked"));
+    }
+
+    req.user = user;
+    next();
+  } catch (error) {
+    next(error);
+  }
 }
 
-/**
- * Middleware to restrict access to Sellers or Admins only.
- */
-export async function authenticatedSeller(req, res, next) {
-    try {
-        const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
-        if (!token) {
-            return res.status(401).json({ success: false, message: "Authentication token is missing" });
-        }
-
-        let decoded;
-        try {
-            decoded = jwt.verify(token, config.JWT_SECRET);
-        } catch (jwtErr) {
-            return res.status(401).json({ 
-                success: false, 
-                message: jwtErr.name === "TokenExpiredError" ? "Token expired" : "Invalid token" 
-            });
-        }
-
-        const user = await userModel.findById(decoded.id);
-        if (!user) {
-            return res.status(401).json({ success: false, message: "User not found" });
-        }
-
-        if (user.role !== "Seller" && user.role !== "Admin") {
-            return res.status(403).json({ success: false, message: "Access forbidden: Seller role required" });
-        }
-
-        req.user = user;
-        next();
-    } catch (error) {
-        console.error("Error during seller authentication middleware:", error);
-        return res.status(500).json({ success: false, message: "Internal server error" });
-    }
-}
+export const authenticatedUser = verifyToken;

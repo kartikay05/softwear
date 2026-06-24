@@ -20,18 +20,20 @@ export const loginThunk = createAsyncThunk(
   "auth/login",
   async ({ email, password }, { rejectWithValue }) => {
     try {
-      const data = await apiLogin(email, password);
-      if (data && data.success) {
+      const response = await apiLogin(email, password);
+      if (response && response.success) {
+        const { user, accessToken } = response.data;
         // Persist session to localStorage
-        localStorage.setItem("user", JSON.stringify(data.user));
-        if (data.token) {
-          localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(user));
+        if (accessToken) {
+          localStorage.setItem("token", accessToken);
         }
-        return data; // returns { success, message, user, token }
+        return { user, token: accessToken };
       }
-      return rejectWithValue(data.message || "Failed to log in");
+      return rejectWithValue(response.message || "Failed to log in");
     } catch (err) {
-      return rejectWithValue(err.message || "Network error");
+      const msg = err.response?.data?.message || err.message || "Network error";
+      return rejectWithValue(msg);
     }
   }
 );
@@ -43,18 +45,20 @@ export const registerThunk = createAsyncThunk(
   "auth/register",
   async (userData, { rejectWithValue }) => {
     try {
-      const data = await apiRegister(userData);
-      if (data && data.success) {
+      const response = await apiRegister(userData);
+      if (response && response.success) {
+        const { user, accessToken } = response.data;
         // Persist session to localStorage
-        localStorage.setItem("user", JSON.stringify(data.user));
-        if (data.token) {
-          localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(user));
+        if (accessToken) {
+          localStorage.setItem("token", accessToken);
         }
-        return data; // returns { success, message, user, token }
+        return { user, token: accessToken };
       }
-      return rejectWithValue(data.message || "Registration failed");
+      return rejectWithValue(response.message || "Registration failed");
     } catch (err) {
-      return rejectWithValue(err.message || "Network error");
+      const msg = err.response?.data?.message || err.message || "Network error";
+      return rejectWithValue(msg);
     }
   }
 );
@@ -66,10 +70,11 @@ export const checkAuthThunk = createAsyncThunk(
   "auth/checkAuth",
   async (_, { rejectWithValue }) => {
     try {
-      const data = await getProfile();
-      if (data && data.success) {
-        localStorage.setItem("user", JSON.stringify(data.user));
-        return data.user;
+      const response = await getProfile();
+      if (response && response.success) {
+        const { user } = response.data;
+        localStorage.setItem("user", JSON.stringify(user));
+        return user;
       }
       // If backend returns unsuccessful profile call, clear storage
       localStorage.removeItem("user");
@@ -78,7 +83,8 @@ export const checkAuthThunk = createAsyncThunk(
     } catch (err) {
       localStorage.removeItem("user");
       localStorage.removeItem("token");
-      return rejectWithValue(err.message || "Session verification failed");
+      const msg = err.response?.data?.message || err.message || "Session verification failed";
+      return rejectWithValue(msg);
     }
   }
 );
@@ -99,7 +105,8 @@ export const logoutThunk = createAsyncThunk(
       // Clear persistence anyway to prevent client lockouts
       localStorage.removeItem("user");
       localStorage.removeItem("token");
-      return rejectWithValue(err.message || "Failed to log out cleanly");
+      const msg = err.response?.data?.message || err.message || "Failed to log out cleanly";
+      return rejectWithValue(msg);
     }
   }
 );
@@ -116,12 +123,18 @@ const authSlice = createSlice({
     setOAuthSuccess: (state, action) => {
       state.user = action.payload.user;
       state.token = action.payload.token || null;
-      state.isAuthenticated = true;
+      state.isAuthenticated = !!action.payload.user;
       state.loading = false;
       state.error = null;
-      localStorage.setItem("user", JSON.stringify(action.payload.user));
+      if (action.payload.user) {
+        localStorage.setItem("user", JSON.stringify(action.payload.user));
+      } else {
+        localStorage.removeItem("user");
+      }
       if (action.payload.token) {
         localStorage.setItem("token", action.payload.token);
+      } else {
+        localStorage.removeItem("token");
       }
     },
   },
@@ -176,7 +189,7 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         state.user = action.payload;
       })
-      .addCase(checkAuthThunk.rejected, (state, action) => {
+      .addCase(checkAuthThunk.rejected, (state) => {
         state.loading = false;
         state.isAuthenticated = false;
         state.user = null;
