@@ -4,6 +4,7 @@ import productModel from "../models/product.model.js";
 import ApiError from "../utils/apiError.js";
 import ApiFeatures from "../utils/apiFeatures.js";
 import sendResponse from "../utils/sendResponse.js";
+import { sendOrderCancellationEmail } from "../services/email.service.js";
 
 function getProductImage(product) {
     return product.images?.[0]?.url || "";
@@ -46,6 +47,19 @@ async function decrementProductStock(items) {
                 $inc: {
                     stock: -item.quantity,
                     sold: item.quantity,
+                },
+            })
+        )
+    );
+}
+
+async function restoreProductStock(items) {
+    await Promise.all(
+        items.map((item) =>
+            productModel.findByIdAndUpdate(item.productId, {
+                $inc: {
+                    stock: item.quantity,
+                    sold: -item.quantity,
                 },
             })
         )
@@ -144,18 +158,17 @@ export async function cancelOrder(req, res, next) {
         }
 
         order.orderStatus = "cancelled";
+        order.cancellation = {
+            reason: req.body.reason || "Cancelled by user",
+            cancelledBy: "user",
+            cancelledAt: new Date(),
+        };
         await order.save();
 
-        await Promise.all(
-            order.items.map((item) =>
-                productModel.findByIdAndUpdate(item.productId, {
-                    $inc: {
-                        stock: item.quantity,
-                        sold: -item.quantity,
-                    },
-                })
-            )
-        );
+        await restoreProductStock(order.items);
+
+        const populatedOrder = await order.populate("userId", "name email");
+        await sendOrderCancellationEmail(populatedOrder.userId, populatedOrder);
 
         return sendResponse(res, 200, "Order cancelled successfully", { order });
     } catch (error) {

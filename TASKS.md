@@ -48,16 +48,15 @@
 - [x] `PUT /api/orders/:id/cancel` — cancel if status is pending/processing
 
 ### 1.6 Payment (Razorpay)
-- [ ] `POST /api/payment/create-order` — create Razorpay order, return order_id
-- [ ] `POST /api/payment/verify` — verify payment signature (HMAC SHA256)
-- [ ] `POST /api/payment/webhook` — Razorpay webhook handler, update order status
-- [ ] On payment success: clear cart, send confirmation email
-- [ ] `POST /api/payment/refund/:orderId` — initiate refund via Razorpay API [Admin]
+- [x] `POST /api/payment/create-order` — create Razorpay order, return order_id
+- [x] `POST /api/payment/verify` — verify payment signature (HMAC SHA256)
+- [x] `POST /api/payment/webhook` — Razorpay webhook handler, update order status
+- [x] On payment success: clear cart, send confirmation email
+- [x] `POST /api/payment/refund/:orderId` — initiate refund via Razorpay API [Admin]
 
 ---
 
 ## Phase 2 — React Frontend (User Side)
-**will do that later first finish backend properly**
 
 ### 2.1 Setup & Config
 - [ ] Setup Axios instance with base URL + interceptors (attach token, handle 401)
@@ -206,7 +205,7 @@
 
 | Phase | Total Tasks | Done | Remaining |
 |---|---|---|---|
-| Phase 1 — Backend Core | 28 | 0 | 28 |
+| Phase 1 — Backend Core | 28 | 28 | 0 |
 | Phase 2 — Frontend User | 18 | 0 | 18 |
 | Phase 3 — Admin Dashboard | 22 | 0 | 22 |
 | Phase 4 — Pro Features | 16 | 0 | 16 |
@@ -216,9 +215,3 @@
 > Update this table manually as you complete tasks.
 
 ---
-
-## Daily Work Log (Optional — fill as you go)
-
-| Date | Tasks Completed | Notes |
-|---|---|---|
-| | | |

@@ -26,3 +26,13 @@ export const orderIdValidator = [
     param("id").isMongoId().withMessage("Invalid order ID"),
     validateRequest,
 ];
+
+export const cancelOrderValidator = [
+    param("id").isMongoId().withMessage("Invalid order ID"),
+    body("reason")
+        .optional()
+        .trim()
+        .isLength({ max: 500 })
+        .withMessage("Cancellation reason cannot exceed 500 characters"),
+    validateRequest,
+];

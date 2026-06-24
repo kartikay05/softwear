@@ -81,6 +81,11 @@ const orderSchema = new mongoose.Schema(
             required: true,
         },
         paymentInfo: {
+            method: {
+                type: String,
+                enum: ["cod", "razorpay"],
+                default: "cod",
+            },
             razorpayOrderId: {
                 type: String,
                 default: "",
@@ -121,6 +126,22 @@ const orderSchema = new mongoose.Schema(
             enum: ["pending", "processing", "shipped", "delivered", "cancelled"],
             default: "pending",
             index: true,
+        },
+        cancellation: {
+            reason: {
+                type: String,
+                default: "",
+                trim: true,
+            },
+            cancelledBy: {
+                type: String,
+                enum: ["user", "admin", ""],
+                default: "",
+            },
+            cancelledAt: {
+                type: Date,
+                default: null,
+            },
         },
     },
     {

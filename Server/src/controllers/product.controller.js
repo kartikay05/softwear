@@ -1,8 +1,13 @@
-import productModel from "../models/product.model.js";
 import ApiError from "../utils/apiError.js";
 import ApiFeatures from "../utils/apiFeatures.js";
 import sendResponse from "../utils/sendResponse.js";
 import { deleteFile, uploadFile } from "../services/storage.service.js";
+import {
+    countProducts,
+    createProduct as createProductRecord,
+    findProductById,
+    findProducts,
+} from "../dao/product.dao.js";
 
 function toNumber(value) {
     if (value === undefined || value === null || value === "") return value;
@@ -66,7 +71,7 @@ export async function createProduct(req, res, next) {
         const payload = normalizeProductBody(req.body);
         const images = await uploadProductImages(req.files);
 
-        const product = await productModel.create({
+        const product = await createProductRecord({
             ...payload,
             images,
         });
@@ -79,12 +84,12 @@ export async function createProduct(req, res, next) {
 
 export async function getAllProducts(req, res, next) {
     try {
-        const features = new ApiFeatures(productModel.find(), req.query)
+        const features = new ApiFeatures(findProducts(), req.query)
             .search(["name", "description", "brand"])
             .filter(["category", "brand", "isFeatured"])
             .sort();
 
-        const totalProducts = await productModel.countDocuments(features.query.getFilter());
+        const totalProducts = await countProducts(features.query.getFilter());
 
         features.paginate(12);
 
@@ -104,7 +109,7 @@ export async function getAllProducts(req, res, next) {
 
 export async function getProductDetails(req, res, next) {
     try {
-        const product = await productModel.findById(req.params.id);
+        const product = await findProductById(req.params.id);
 
         if (!product) {
             return next(new ApiError(404, "Product not found"));
@@ -118,7 +123,7 @@ export async function getProductDetails(req, res, next) {
 
 export async function updateProduct(req, res, next) {
     try {
-        const product = await productModel.findById(req.params.id);
+        const product = await findProductById(req.params.id);
 
         if (!product) {
             return next(new ApiError(404, "Product not found"));
@@ -142,7 +147,7 @@ export async function updateProduct(req, res, next) {
 
 export async function deleteProduct(req, res, next) {
     try {
-        const product = await productModel.findById(req.params.id);
+        const product = await findProductById(req.params.id);
 
         if (!product) {
             return next(new ApiError(404, "Product not found"));

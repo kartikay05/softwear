@@ -1,38 +1,62 @@
+import crypto from "crypto";
 import Razorpay from "razorpay";
 import config from "../config/config.js";
 
-const razorpay = new Razorpay({
-    key_id: config.RAZORPAY_KEY_ID,
-    key_secret: config.RAZORPAY_KEY_SECRET,
-});
+let razorpay;
 
-export async function createOrder(amount, currency, notes){
-    try{
-        const order = await razorpay.orders.create({
-            amount: amount * 100,
-            currency: currency,
-            notes: notes,
-            receipt: `receipt_${Date.now()}`,
-        })
-        return order
-    }
-    catch(error){
-        console.log(error)
-        throw error
-    }
+export function isRazorpayConfigured() {
+    return Boolean(config.RAZORPAY_KEY_ID && config.RAZORPAY_KEY_SECRET);
 }
 
-export async function verifyPayment(paymentId, orderId, signature){
-    try{
-        const response = await razorpay.payments.verify({
-            payment_id: paymentId,
-            order_id: orderId,
-            signature: signature
-        })
-        return response
+function getRazorpayClient() {
+    if (!isRazorpayConfigured()) {
+        throw new Error("Razorpay credentials are not configured");
     }
-    catch(error){
-        console.log(error)
-        throw error
+
+    if (!razorpay) {
+        razorpay = new Razorpay({
+            key_id: config.RAZORPAY_KEY_ID,
+            key_secret: config.RAZORPAY_KEY_SECRET,
+        });
     }
+
+    return razorpay;
+}
+
+export async function createRazorpayOrder({ amount, currency = "INR", receipt, notes = {} }) {
+    const client = getRazorpayClient();
+
+    return client.orders.create({
+        amount: Math.round(Number(amount) * 100),
+        currency,
+        receipt: receipt || `receipt_${Date.now()}`,
+        notes,
+    });
+}
+
+export function verifyRazorpaySignature({ razorpayOrderId, razorpayPaymentId, razorpaySignature }) {
+    if (!isRazorpayConfigured()) {
+        return false;
+    }
+
+    const payload = `${razorpayOrderId}|${razorpayPaymentId}`;
+    const expectedSignature = crypto
+        .createHmac("sha256", config.RAZORPAY_KEY_SECRET)
+        .update(payload)
+        .digest("hex");
+
+    return expectedSignature === razorpaySignature;
+}
+
+export function verifyRazorpayWebhookSignature(rawBody, signature) {
+    if (!config.RAZORPAY_WEBHOOK_SECRET || !signature) {
+        return false;
+    }
+
+    const expectedSignature = crypto
+        .createHmac("sha256", config.RAZORPAY_WEBHOOK_SECRET)
+        .update(rawBody)
+        .digest("hex");
+
+    return expectedSignature === signature;
 }
