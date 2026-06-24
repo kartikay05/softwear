@@ -67,9 +67,15 @@ async function deleteProductImages(images = []) {
 }
 
 export async function createProduct(req, res, next) {
+    let images = [];
+
     try {
         const payload = normalizeProductBody(req.body);
-        const images = await uploadProductImages(req.files);
+        images = await uploadProductImages(req.files);
+
+        if (payload.discountPrice !== null && payload.discountPrice > payload.price) {
+            throw new ApiError(400, "discountPrice cannot exceed price");
+        }
 
         const product = await createProductRecord({
             ...payload,
@@ -78,6 +84,7 @@ export async function createProduct(req, res, next) {
 
         return sendResponse(res, 201, "Product created successfully", { product });
     } catch (error) {
+        if (images.length) await deleteProductImages(images);
         next(error);
     }
 }
@@ -100,6 +107,7 @@ export async function getAllProducts(req, res, next) {
             pagination: {
                 ...features.pagination,
                 totalProducts,
+                totalPages: Math.ceil(totalProducts / features.pagination.limit),
             },
         });
     } catch (error) {
@@ -122,6 +130,8 @@ export async function getProductDetails(req, res, next) {
 }
 
 export async function updateProduct(req, res, next) {
+    let replacementImages = [];
+
     try {
         const product = await findProductById(req.params.id);
 
@@ -130,17 +140,28 @@ export async function updateProduct(req, res, next) {
         }
 
         const payload = normalizeProductBody(req.body);
+        const previousImages = product.images.map((image) => image.toObject());
 
         if (req.files?.length) {
-            await deleteProductImages(product.images);
-            payload.images = await uploadProductImages(req.files);
+            replacementImages = await uploadProductImages(req.files);
+            payload.images = replacementImages;
         }
 
         Object.assign(product, payload);
+
+        if (product.discountPrice !== null && product.discountPrice > product.price) {
+            throw new ApiError(400, "discountPrice cannot exceed price");
+        }
+
         await product.save();
+
+        if (replacementImages.length) {
+            await deleteProductImages(previousImages);
+        }
 
         return sendResponse(res, 200, "Product updated successfully", { product });
     } catch (error) {
+        if (replacementImages.length) await deleteProductImages(replacementImages);
         next(error);
     }
 }
@@ -153,8 +174,9 @@ export async function deleteProduct(req, res, next) {
             return next(new ApiError(404, "Product not found"));
         }
 
-        await deleteProductImages(product.images);
+        const images = product.images.map((image) => image.toObject());
         await product.deleteOne();
+        await deleteProductImages(images);
 
         return sendResponse(res, 200, "Product deleted successfully", { product });
     } catch (error) {

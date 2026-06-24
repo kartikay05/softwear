@@ -4,8 +4,17 @@ import { loginValidator, registerValidator } from "../validator/auth.validator.j
 import passport from "passport";
 import config from "../config/config.js";
 import { verifyToken } from "../middlewares/auth.middleware.js";
+import ApiError from "../utils/apiError.js";
 
 const authRouter = Router();
+
+function requireGoogleOAuth(req, res, next) {
+    if (!config.GOOGLE_CLIENT_ID || !config.GOOGLE_CLIENT_SECRET) {
+        return next(new ApiError(503, "Google authentication is not configured"));
+    }
+
+    next();
+}
 
 // auth routes
 authRouter.post("/register", registerValidator, register);
@@ -22,11 +31,13 @@ authRouter.post("/logout", logout);
     @route GET /api/auth/google
     @route GET /api/auth/google/callback
 */
-authRouter.get("/google", 
+authRouter.get("/google",
+    requireGoogleOAuth,
     passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
 authRouter.get("/google/callback",
+    requireGoogleOAuth,
     passport.authenticate("google",  { session: false, failureRedirect: config.CLIENT_URL +"/login"}),
     googleCallback
 );

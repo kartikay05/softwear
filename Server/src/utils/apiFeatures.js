@@ -6,7 +6,9 @@ class ApiFeatures {
 
     search(fields = ["name"]) {
         if (this.queryString.search) {
-            const keyword = this.queryString.search.trim();
+            const keyword = this.queryString.search
+                .trim()
+                .replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
             this.query = this.query.find({
                 $or: fields.map((field) => ({
                     [field]: { $regex: keyword, $options: "i" },
@@ -21,15 +23,15 @@ class ApiFeatures {
         const filters = {};
 
         allowedFields.forEach((field) => {
-            if (this.queryString[field]) {
+            if (this.queryString[field] !== undefined && this.queryString[field] !== "") {
                 filters[field] = this.queryString[field];
             }
         });
 
-        if (this.queryString.minPrice || this.queryString.maxPrice) {
+        if (this.queryString.minPrice !== undefined || this.queryString.maxPrice !== undefined) {
             filters.price = {};
-            if (this.queryString.minPrice) filters.price.$gte = Number(this.queryString.minPrice);
-            if (this.queryString.maxPrice) filters.price.$lte = Number(this.queryString.maxPrice);
+            if (this.queryString.minPrice !== undefined) filters.price.$gte = Number(this.queryString.minPrice);
+            if (this.queryString.maxPrice !== undefined) filters.price.$lte = Number(this.queryString.maxPrice);
         }
 
         this.query = this.query.find(filters);
@@ -47,7 +49,7 @@ class ApiFeatures {
 
     paginate(defaultLimit = 12) {
         const page = Math.max(Number(this.queryString.page) || 1, 1);
-        const limit = Math.max(Number(this.queryString.limit) || defaultLimit, 1);
+        const limit = Math.min(Math.max(Number(this.queryString.limit) || defaultLimit, 1), 100);
         const skip = (page - 1) * limit;
 
         this.query = this.query.skip(skip).limit(limit);

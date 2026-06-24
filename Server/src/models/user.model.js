@@ -65,10 +65,9 @@ const userSchema = new mongoose.Schema(
 );
 
 // ✅ Hash password — use next() for safety across all Mongoose versions
-userSchema.pre("save", async function (next) {
+userSchema.pre("save", async function () {
   if (!this.isModified("password") || !this.password) return;
   this.password = await bcrypt.hash(this.password, 12);
-  // next();
 });
 
 // ✅ comparePassword — guard against undefined hash

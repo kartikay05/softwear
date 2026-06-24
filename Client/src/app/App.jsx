@@ -28,13 +28,25 @@ import OrderSuccessPage from '../features/orders/pages/OrderSuccessPage.jsx';
 import ProfilePage from '../features/auth/pages/ProfilePage.jsx';
 import AdminDashboard from '../features/admin/pages/AdminDashboard.jsx';
 
-// 404 Page
+// 404 Page — Stitch design system
 const NotFoundPage = () => (
-  <div className="min-h-[70vh] flex flex-col items-center justify-center bg-white px-6">
-    <h1 className="text-9xl font-light font-serif italic text-neutral-200">404</h1>
-    <h2 className="text-lg font-semibold text-neutral-900 mt-4 mb-2">Page Not Found</h2>
-    <p className="text-neutral-500 text-sm mb-6 text-center max-w-sm">The profile page or route you requested does not exist.</p>
-    <Link to="/" className="px-6 py-2.5 bg-neutral-900 text-white text-xs font-semibold tracking-widest uppercase">
+  <div
+    className="min-h-[70vh] flex flex-col items-center justify-center px-6"
+    style={{ backgroundColor: 'var(--sw-surface)' }}
+  >
+    <h1
+      className="text-[10rem] leading-none italic"
+      style={{ fontFamily: 'var(--font-headline)', color: 'var(--sw-surface-container-high)', fontWeight: 400 }}
+    >
+      404
+    </h1>
+    <h2 className="text-lg font-semibold mt-4 mb-2" style={{ color: 'var(--sw-on-surface)', fontFamily: 'var(--font-body)' }}>
+      Page Not Found
+    </h2>
+    <p className="text-sm mb-8 text-center max-w-sm" style={{ color: 'var(--sw-on-surface-variant)' }}>
+      The page or route you requested does not exist.
+    </p>
+    <Link to="/" className="btn-primary">
       Back to Home
     </Link>
   </div>
@@ -46,7 +58,7 @@ const AppContent = () => {
   useTokenRefresh(5 * 60 * 1000);
 
   return (
-    <div className="flex flex-col min-h-screen bg-white">
+    <div className="flex flex-col min-h-screen" style={{ backgroundColor: 'var(--sw-surface)' }}>
       <Nav />
       <main className="flex-grow">
         <Routes>
@@ -58,39 +70,39 @@ const AppContent = () => {
           <Route path="/cart" element={<CartPage />} />
 
           {/* Protected Buyer Routes */}
-          <Route 
-            path="/checkout" 
+          <Route
+            path="/checkout"
             element={
               <ProtectedRoute>
                 <CheckoutPage />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/order-success" 
+          <Route
+            path="/order-success"
             element={
               <ProtectedRoute>
                 <OrderSuccessPage />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/profile" 
+          <Route
+            path="/profile"
             element={
               <ProtectedRoute>
                 <ProfilePage />
               </ProtectedRoute>
-            } 
+            }
           />
 
           {/* Protected Admin Routes */}
-          <Route 
-            path="/admin" 
+          <Route
+            path="/admin"
             element={
               <AdminRoute>
                 <AdminDashboard />
               </AdminRoute>
-            } 
+            }
           />
 
           {/* Fallback 404 */}
@@ -98,7 +110,26 @@ const AppContent = () => {
         </Routes>
       </main>
       <Footer />
-      <Toaster position="bottom-right" toastOptions={{ duration: 4000 }} />
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            fontFamily: 'var(--font-body)',
+            fontSize: '13px',
+            backgroundColor: 'var(--sw-inverse-surface)',
+            color: 'var(--sw-inverse-on-surface)',
+            borderRadius: 'var(--sw-radius)',
+            boxShadow: 'var(--sw-shadow-warm)',
+          },
+          success: {
+            iconTheme: { primary: 'var(--sw-secondary)', secondary: '#fff' },
+          },
+          error: {
+            iconTheme: { primary: 'var(--sw-error)', secondary: '#fff' },
+          },
+        }}
+      />
     </div>
   );
 };

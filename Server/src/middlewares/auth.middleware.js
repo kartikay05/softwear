@@ -5,15 +5,9 @@ import ApiError from "../utils/apiError.js";
 
 export async function verifyToken(req, res, next) {
   try {
-    const authHeader = req.headers.authorization;
-    // Try to get token from Authorization header first
-    let token = authHeader && authHeader.startsWith("Bearer ")
-      ? authHeader.split(" ")[1]
-      : null;
-    // Fallback: check access token stored in cookies (requires cookie-parser middleware)
-    if (!token && req.cookies && req.cookies.accessToken) {
-      token = req.cookies.accessToken;
-    }
+    const authHeader = req.get("authorization");
+    const bearerToken = authHeader?.match(/^Bearer\s+(.+)$/i)?.[1]?.trim();
+    const token = bearerToken || req.cookies?.accessToken;
 
     if (!token) {
       return next(new ApiError(401, "Access token is missing"));
@@ -22,19 +16,14 @@ export async function verifyToken(req, res, next) {
     let decoded;
     try {
       decoded = jwt.verify(token, config.JWT_ACCESS_SECRET);
-    } catch (jwtErr) {
-      return next(
-        new ApiError(
-          401,
-          jwtErr.name === "TokenExpiredError"
-            ? "Access token expired"
-            : "Invalid access token"
-        )
-      );
+    } catch (error) {
+      const message = error.name === "TokenExpiredError"
+        ? "Access token expired"
+        : "Invalid access token";
+      return next(new ApiError(401, message));
     }
 
-    // ✅ Only hit DB if you need live isBlocked check — skip if low-risk routes
-    const user = await userModel.findById(decoded.id).select("-refreshToken");
+    const user = await userModel.findById(decoded.id);
     if (!user) {
       return next(new ApiError(401, "User not found"));
     }

@@ -1,38 +1,217 @@
 @import "tailwindcss";
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   SOFTWEAR DESIGN SYSTEM — From Stitch MCP
+   Brand: Terracotta × Sage × Oatmeal (warm minimalism)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Surface Scale (Oatmeal warmth) ─────────────────────────────────────── */
+  --sw-surface:                  #fcf9f8;
+  --sw-surface-dim:              #dcd9d9;
+  --sw-surface-bright:           #fcf9f8;
+  --sw-surface-container-lowest: #ffffff;
+  --sw-surface-container-low:    #f6f3f2;
+  --sw-surface-container:        #f0eded;
+  --sw-surface-container-high:   #eae7e7;
+  --sw-surface-container-highest:#e4e2e1;
+  --sw-on-surface:               #1b1c1c;
+  --sw-on-surface-variant:       #56423d;
+
+  /* ── Inverse ─────────────────────────────────────────────────────────────── */
+  --sw-inverse-surface:          #303030;
+  --sw-inverse-on-surface:       #f3f0f0;
+
+  /* ── Outlines ────────────────────────────────────────────────────────────── */
+  --sw-outline:                  #89726c;
+  --sw-outline-variant:          #dcc0ba;
+
+  /* ── Primary: Terracotta ─────────────────────────────────────────────────── */
+  --sw-primary:                  #9a4027;
+  --sw-primary-hover:            #b9573d;
+  --sw-primary-light:            #d36b4f;
+  --sw-on-primary:               #ffffff;
+  --sw-primary-container:        #b9573d;
+  --sw-on-primary-container:     #fffbff;
+  --sw-primary-fixed:            #ffdbd1;
+  --sw-primary-fixed-dim:        #ffb5a1;
+
+  /* ── Secondary: Sage ─────────────────────────────────────────────────────── */
+  --sw-secondary:                #506351;
+  --sw-secondary-hover:          #3d4e3e;
+  --sw-on-secondary:             #ffffff;
+  --sw-secondary-container:      #d0e5ce;
+  --sw-on-secondary-container:   #556755;
+
+  /* ── Tertiary: Stone ─────────────────────────────────────────────────────── */
+  --sw-tertiary:                 #5d5c59;
+  --sw-on-tertiary:              #ffffff;
+
+  /* ── Error ───────────────────────────────────────────────────────────────── */
+  --sw-error:                    #ba1a1a;
+  --sw-on-error:                 #ffffff;
+
+  /* ── Typography (Stitch spec) ────────────────────────────────────────────── */
+  --font-headline: 'EB Garamond', Georgia, serif;
+  --font-body:     'Be Vietnam Pro', system-ui, sans-serif;
+
+  /* ── Spacing ─────────────────────────────────────────────────────────────── */
+  --sw-radius-sm:  0.25rem;
+  --sw-radius:     0.5rem;
+  --sw-radius-md:  0.75rem;
+  --sw-radius-lg:  1rem;
+  --sw-radius-xl:  1.5rem;
+  --sw-radius-full: 9999px;
+
+  /* ── Warm shadow (terracotta-tinted at 4%) ────────────────────────────────── */
+  --sw-shadow-warm: 0 8px 40px 0 rgba(154, 64, 39, 0.06),
+                    0 2px 12px 0 rgba(154, 64, 39, 0.04);
+  --sw-shadow-card: 0 2px 16px 0 rgba(154, 64, 39, 0.05);
+}
+
+/* ─── Global Reset & Body Font ───────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--sw-surface);
+  color: var(--sw-on-surface);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Headline utility ───────────────────────────────────────────────────── */
+.font-headline {
+  font-family: var(--font-headline);
+}
+
+/* ─── Primary (Terracotta) button styles ─────────────────────────────────── */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--sw-primary);
+  color: var(--sw-on-primary);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.875rem 2rem;
+  border-radius: var(--sw-radius);
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+.btn-primary:hover  { background-color: var(--sw-primary-hover); }
+.btn-primary:active { transform: scale(0.98); }
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: transparent;
+  color: var(--sw-on-surface);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.875rem 2rem;
+  border-radius: var(--sw-radius);
+  border: 1.5px solid var(--sw-on-surface);
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
+}
+.btn-secondary:hover  { background-color: var(--sw-on-surface); color: var(--sw-surface); }
+.btn-secondary:active { transform: scale(0.98); }
+
+/* ─── Input style (Stitch: bottom-border only on focus) ─────────────────── */
+.sw-input {
+  width: 100%;
+  background-color: var(--sw-surface-container-low);
+  border: none;
+  border-bottom: 1.5px solid var(--sw-outline-variant);
+  border-radius: 0;
+  padding: 0.625rem 0.75rem;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--sw-on-surface);
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+.sw-input:focus { border-bottom-color: var(--sw-primary); }
+.sw-input::placeholder { color: var(--sw-outline); }
+
 /* ─── Autocomplete / Autofill theme-matching ─────────────────────────────── */
-/* Forces browser autofill to match our clean white UI */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {
-  -webkit-text-fill-color: #171717 !important;
-  -webkit-box-shadow: 0 0 0px 1000px #fafafa inset !important;
+  -webkit-text-fill-color: #1b1c1c !important;
+  -webkit-box-shadow: 0 0 0px 1000px #f6f3f2 inset !important;
   transition: background-color 5000s ease-in-out 0s;
 }
 
-/* ─── Fade-in entrance animation ─────────────────────────────────────────── */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px) scale(0.99);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
 /* ─── Smooth page scrolling ──────────────────────────────────────────────── */
-html {
-  scroll-behavior: smooth;
-}
+html { scroll-behavior: smooth; }
 
-/* ─── Focus ring consistency ─────────────────────────────────────────────── */
+/* ─── Focus ring (terracotta) ────────────────────────────────────────────── */
 *:focus-visible {
-  outline: 2px solid #6366f1;
+  outline: 2px solid var(--sw-primary);
   outline-offset: 2px;
 }
+
+/* ─── Text selection colour ──────────────────────────────────────────────── */
+::selection {
+  background-color: var(--sw-primary-fixed);
+  color: var(--sw-on-surface);
+}
+
+/* ─── Custom scrollbar ───────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--sw-surface-container); }
+::-webkit-scrollbar-thumb {
+  background: var(--sw-outline-variant);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--sw-outline); }
+
+/* ─── Animations ─────────────────────────────────────────────────────────── */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(12px) scale(0.99); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);     }
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.99); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1);    }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+.animate-fadeIn     { animation: fadeIn     0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-fadeSlideUp{ animation: fadeSlideUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-scaleIn    { animation: scaleIn    0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+/* Skeleton shimmer loader */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--sw-surface-container)    25%,
+    var(--sw-surface-container-high) 50%,
+    var(--sw-surface-container)    75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+  border-radius: var(--sw-radius-sm);
+}
+

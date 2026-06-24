@@ -4,32 +4,22 @@ import config from "../config/config.js";
 import ApiError from "../utils/apiError.js";
 import sendResponse from "../utils/sendResponse.js";
 import {
+  clearAccessTokenCookie,
   clearRefreshTokenCookie,
-  generateAccessToken,
-  generateRefreshToken,
-  setRefreshTokenCookie,
+  issueAuthTokens,
 } from "../utils/jwt.js";
 
 function serializeUser(user) {
+  const role = user.role?.toLowerCase() === "admin" ? "admin" : "user";
+
   return {
     id: user._id,
     name: user.name,
     email: user.email,
-    role: user.role,
+    role,
     avatar: user.avatar,
     isBlocked: user.isBlocked,
   };
-}
-
-async function issueAuthTokens(user, res) {
-  const accessToken = generateAccessToken(user);
-  const refreshToken = generateRefreshToken(user);
-
-  user.refreshToken = refreshToken;
-  await user.save({ validateBeforeSave: false });
-  setRefreshTokenCookie(res, refreshToken);
-
-  return accessToken;
 }
 
 export async function register(req, res, next) {
@@ -69,6 +59,8 @@ export async function login(req, res, next) {
     }
 
     if (user.isBlocked) {
+      clearAccessTokenCookie(res);
+      clearRefreshTokenCookie(res);
       return next(new ApiError(403, "Your account has been blocked"));
     }
 
@@ -99,11 +91,15 @@ export async function refreshToken(req, res, next) {
     try {
       decoded = jwt.verify(token, config.JWT_REFRESH_SECRET);
     } catch (error) {
+      clearAccessTokenCookie(res);
+      clearRefreshTokenCookie(res);
       return next(new ApiError(401, "Invalid or expired refresh token"));
     }
 
     const user = await userModel.findById(decoded.id).select("+refreshToken");
     if (!user || user.refreshToken !== token) {
+      clearAccessTokenCookie(res);
+      clearRefreshTokenCookie(res);
       return next(new ApiError(401, "Refresh token is invalid"));
     }
 
@@ -155,9 +151,8 @@ export async function googleCallback(req, res, next) {
       });
     }
 
-    const accessToken = await issueAuthTokens(user, res);
+    await issueAuthTokens(user, res);
     const redirectUrl = new URL(config.CLIENT_URL);
-    redirectUrl.searchParams.set("accessToken", accessToken);
     res.redirect(redirectUrl.toString());
   } catch (error) {
     next(error);
@@ -165,6 +160,7 @@ export async function googleCallback(req, res, next) {
 }
 
 export async function getProfile(req, res) {
+  res.set("Cache-Control", "no-store");
   return sendResponse(res, 200, "User profile fetched successfully", {
     user: serializeUser(req.user),
   });
@@ -182,6 +178,7 @@ export async function logout(req, res, next) {
     }
 
     clearRefreshTokenCookie(res);
+    clearAccessTokenCookie(res);
     return sendResponse(res, 200, "User logged out successfully");
   } catch (error) {
     next(error);

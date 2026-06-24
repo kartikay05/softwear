@@ -11,13 +11,14 @@ import { isAdmin } from "../middlewares/role.middleware.js";
 import { uploadProductImages } from "../middlewares/upload.middleware.js";
 import {
     createProductValidator,
+    listProductsValidator,
     productIdValidator,
     updateProductValidator,
 } from "../validator/product.validator.js";
 
 const productRouter = Router();
 
-productRouter.get("/", getAllProducts);
+productRouter.get("/", listProductsValidator, getAllProducts);
 productRouter.get("/:id", productIdValidator, getProductDetails);
 productRouter.post("/", verifyToken, isAdmin, uploadProductImages, createProductValidator, createProduct);
 productRouter.put("/:id", verifyToken, isAdmin, uploadProductImages, updateProductValidator, updateProduct);

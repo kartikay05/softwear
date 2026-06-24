@@ -13,9 +13,15 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import cors from "cors";
 import config from "./config/config.js";
 import { errorHandler, notFound } from "./middlewares/error.middleware.js";
+import ApiError from "./utils/apiError.js";
 
 
 const app = express();
+
+const allowedOrigins = new Set([
+    config.CLIENT_URL.replace(/\/$/, ""),
+    "http://localhost:5173",
+]);
 
 app.use(morgan('dev'));
 app.use(express.json());
@@ -23,8 +29,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use(cors({
-    origin: [config.CLIENT_URL, "http://localhost:5173"],
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    origin(origin, callback) {
+        if (!origin || allowedOrigins.has(origin.replace(/\/$/, ""))) {
+            return callback(null, true);
+        }
+
+        callback(new ApiError(403, "Origin is not allowed by CORS"));
+    },
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"]
 }));
@@ -50,7 +62,9 @@ app.use("/api/cart", cartRouter);
 app.use("/api/orders", orderRouter);
 app.use("/api/payment", paymentRouter);
 app.use("/api/admin", adminRouter);
-app.use("/api/test", testRouter);
+if (config.NODE_ENV !== "production") {
+    app.use("/api/test", testRouter);
+}
 
 
 app.use(notFound);

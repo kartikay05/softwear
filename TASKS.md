@@ -59,16 +59,16 @@
 ## Phase 2 — React Frontend (User Side)
 
 ### 2.1 Setup & Config
-- [ ] Setup Axios instance with base URL + interceptors (attach token, handle 401)
-- [ ] Configure Redux store with all slices
-- [ ] Setup React Router with protected routes
-- [ ] Setup ProtectedRoute component (redirect if not logged in)
-- [ ] Setup AdminRoute component (redirect if not admin)
+- [x] Setup Axios instance with base URL + interceptors (attach token, handle 401)
+- [x] Configure Redux store with all slices
+- [x] Setup React Router with protected routes
+- [x] Setup ProtectedRoute component (redirect if not logged in)
+- [x] Setup AdminRoute component (redirect if not admin)
 
 ### 2.2 Auth Pages (Refactor Existing UI)
-- [ ] Login page — connect to API, store token in Redux, handle errors
-- [ ] Register page — connect to API
-- [ ] Google Login button — working OAuth flow
+- [x] Login page — connect to API, store token in Redux, handle errors
+- [x] Register page — connect to API
+- [x] Google Login button — working OAuth flow
 
 ### 2.3 Product Pages
 - [ ] `HomePage.jsx` — featured products, categories section, hero banner

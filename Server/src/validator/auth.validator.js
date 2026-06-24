@@ -11,18 +11,22 @@ function validateResult(req, res, next) {
 
 export const registerValidator = [
   body("email")
+    .trim()
     .notEmpty()
     .withMessage("Email is required")
     .isEmail()
-    .withMessage("Enter a valid email"),
+    .withMessage("Enter a valid email")
+    .normalizeEmail(),
 
   body("name")
     .optional()
+    .trim()
     .isLength({ min: 3 })
     .withMessage("Name must be at least 3 characters long"),
 
   body("fullName")
     .optional()
+    .trim()
     .isLength({ min: 3 })
     .withMessage("Full name must be at least 3 characters long"),
 
@@ -43,10 +47,12 @@ export const registerValidator = [
 
 export const loginValidator = [
   body("email")
+    .trim()
     .notEmpty()
     .withMessage("Email is required")
     .isEmail()
-    .withMessage("Enter a valid email"),
+    .withMessage("Enter a valid email")
+    .normalizeEmail(),
 
   body("password")
     .notEmpty()

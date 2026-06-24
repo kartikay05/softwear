@@ -2,8 +2,18 @@ import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Sparkles, MoveRight } from 'lucide-react';
+import { ArrowRight, MoveRight, Leaf, RefreshCw, ShieldCheck, Mail } from 'lucide-react';
 import { fetchProductsThunk } from '../state/product.slice.js';
+
+/* Fade-up entrance variant for sections */
+const fadeUp = {
+  hidden:  { opacity: 0, y: 24 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
+};
+
+const stagger = {
+  visible: { transition: { staggerChildren: 0.09 } },
+};
 
 export const HomePage = () => {
   const dispatch = useDispatch();
@@ -11,207 +21,425 @@ export const HomePage = () => {
   const { items: products, loading } = useSelector((state) => state.products);
 
   useEffect(() => {
-    // Fetch products for featured list on homepage load
     dispatch(fetchProductsThunk({ limit: 4 }));
   }, [dispatch]);
 
   const categories = [
     {
-      name: "Outerwear",
-      img: "https://images.unsplash.com/photo-1544022613-e87ca75a784a?q=80&w=600&auto=format&fit=crop",
-      link: "/products?category=Outerwear",
-      tagline: "Tailored structures"
+      name: 'Outerwear',
+      img: 'https://images.unsplash.com/photo-1544022613-e87ca75a784a?q=80&w=700&auto=format&fit=crop',
+      link: '/products?category=Outerwear',
+      tagline: 'Tailored structures',
     },
     {
-      name: "Knitwear",
-      img: "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?q=80&w=600&auto=format&fit=crop",
-      link: "/products?category=Knitwear",
-      tagline: "Fine textures"
+      name: 'Knitwear',
+      img: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?q=80&w=700&auto=format&fit=crop',
+      link: '/products?category=Knitwear',
+      tagline: 'Fine textures',
     },
     {
-      name: "Basics",
-      img: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=600&auto=format&fit=crop",
-      link: "/products?category=Basics",
-      tagline: "Essential cuts"
+      name: 'Basics',
+      img: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=700&auto=format&fit=crop',
+      link: '/products?category=Basics',
+      tagline: 'Essential cuts',
     },
     {
-      name: "Accessories",
-      img: "https://images.unsplash.com/photo-1509319117193-57bab727e09d?q=80&w=600&auto=format&fit=crop",
-      link: "/products?category=Accessories",
-      tagline: "Finishing profiles"
-    }
+      name: 'Accessories',
+      img: 'https://images.unsplash.com/photo-1509319117193-57bab727e09d?q=80&w=700&auto=format&fit=crop',
+      link: '/products?category=Accessories',
+      tagline: 'Finishing profiles',
+    },
+  ];
+
+  const values = [
+    { Icon: ShieldCheck, title: 'Authentic curation',  body: 'Direct from designers, strictly verified materials.' },
+    { Icon: Leaf,        title: 'Sustainably sourced',  body: 'Ethically made from natural, low-impact fibers.' },
+    { Icon: RefreshCw,   title: 'Circular fashion',     body: 'Return packaging or old pieces for store credits.' },
   ];
 
   return (
-    <div className="bg-white min-h-screen text-neutral-900 pb-20">
-      {/* Editorial Hero Banner */}
-      <section className="relative h-[85vh] bg-[#f5f5f5] overflow-hidden flex items-center">
+    <div style={{ backgroundColor: 'var(--sw-surface)', color: 'var(--sw-on-surface)' }} className="min-h-screen">
+
+      {/* ── Hero ─────────────────────────────────────────────────────────────── */}
+      <section className="relative h-[90vh] overflow-hidden flex items-center">
+        {/* Background image */}
         <div className="absolute inset-0 z-0">
-          <img 
-            src="https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=1600&auto=format&fit=crop" 
-            alt="Hero Background" 
-            className="w-full h-full object-cover object-[50%_30%] filter grayscale contrast-110 brightness-95 opacity-80"
+          <img
+            src="https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=1800&auto=format&fit=crop"
+            alt="Softwear S/S26 hero"
+            className="w-full h-full object-cover object-[50%_30%] brightness-[0.88]"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-white/60 via-white/20 to-transparent" />
+          {/* Warm gradient overlay — oatmeal tint from left */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: 'linear-gradient(105deg, rgba(252,249,248,0.82) 0%, rgba(252,249,248,0.40) 45%, transparent 70%)',
+            }}
+          />
         </div>
 
-        <div className="max-w-7xl mx-auto px-8 w-full relative z-10">
+        {/* Hero copy */}
+        <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 w-full relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
+            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
             className="max-w-xl"
           >
-            <span className="text-xs uppercase tracking-[0.25em] font-medium text-neutral-500 block mb-4">
-              SPRING / SUMMER COLLECTION 2026
+            <span
+              className="text-[11px] uppercase tracking-[0.25em] font-semibold block mb-5"
+              style={{ color: 'var(--sw-secondary)', fontFamily: 'var(--font-body)' }}
+            >
+              Spring / Summer Collection 2026
             </span>
-            <h1 className="text-6xl sm:text-8xl font-light tracking-tight leading-[1.05] text-neutral-900 font-serif italic mb-6">
+            <h1
+              className="text-6xl sm:text-7xl lg:text-8xl leading-[1.02] mb-6"
+              style={{ fontFamily: 'var(--font-headline)', fontWeight: 500, color: 'var(--sw-on-surface)' }}
+            >
               Quiet <br />
-              <span className="font-sans not-italic font-semibold text-neutral-900">Elevations</span>
+              <span
+                style={{ fontFamily: 'var(--font-body)', fontStyle: 'normal', fontWeight: 700 }}
+              >
+                Elevations
+              </span>
             </h1>
-            <p className="text-neutral-500 text-sm tracking-wide leading-relaxed mb-8 max-w-sm">
+            <p
+              className="text-sm leading-relaxed mb-10 max-w-sm"
+              style={{ color: 'var(--sw-on-surface-variant)', fontFamily: 'var(--font-body)' }}
+            >
               An inspection of structural shapes, breathable raw materials, and monochromatic silhouettes. Made to adapt.
             </p>
-            <div className="flex items-center gap-6">
-              <Link 
-                to="/products" 
-                className="px-8 py-3.5 bg-neutral-900 text-white text-xs font-semibold tracking-widest uppercase hover:bg-neutral-800 transition-colors duration-200"
-              >
+            <div className="flex flex-wrap items-center gap-4">
+              <Link to="/products" className="btn-primary">
                 Shop Collection
               </Link>
-              <Link 
-                to="/products" 
-                className="text-xs font-semibold tracking-widest uppercase flex items-center gap-2 group hover:text-neutral-600 transition-colors"
+              <Link
+                to="/products"
+                className="flex items-center gap-2 text-[11px] font-semibold tracking-widest uppercase group transition-colors"
+                style={{ color: 'var(--sw-on-surface)' }}
               >
-                Explore S/S26 <MoveRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                Explore S/S26
+                <MoveRight
+                  className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1"
+                />
               </Link>
             </div>
           </motion.div>
         </div>
 
-        <div className="absolute bottom-8 right-8 text-right hidden md:block">
-          <p className="text-[10px] tracking-[0.3em] uppercase text-neutral-400 font-medium">Softwear Design Studio®</p>
+        {/* Brand credit */}
+        <div className="absolute bottom-8 right-8 hidden md:block text-right">
+          <p
+            className="text-[10px] tracking-[0.3em] uppercase font-medium"
+            style={{ color: 'var(--sw-on-surface-variant)' }}
+          >
+            Softwear Design Studio®
+          </p>
         </div>
       </section>
 
-      {/* Curated Categories */}
-      <section className="max-w-7xl mx-auto px-8 py-24">
-        <div className="flex flex-col md:flex-row justify-between items-baseline mb-12">
-          <div>
-            <h2 className="text-2xl font-semibold tracking-tight">Curated Portfolios</h2>
-            <p className="text-neutral-500 text-xs mt-1">Browse by structural archetype.</p>
-          </div>
-          <Link to="/products" className="text-xs font-semibold tracking-widest uppercase hover:underline mt-4 md:mt-0">
-            View All Categories
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {categories.map((cat, idx) => (
-            <motion.div
-              key={cat.name}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: idx * 0.1, duration: 0.5 }}
-              onClick={() => navigate(cat.link)}
-              className="group cursor-pointer relative aspect-[3/4] overflow-hidden bg-neutral-100"
-            >
-              <img 
-                src={cat.img} 
-                alt={cat.name} 
-                className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 filter grayscale group-hover:grayscale-0"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-80" />
-              <div className="absolute bottom-6 left-6 text-white">
-                <span className="text-[10px] tracking-widest uppercase text-neutral-300 block mb-1">
-                  {cat.tagline}
-                </span>
-                <h3 className="text-lg font-medium tracking-wide">{cat.name}</h3>
+      {/* ── Values Strip ─────────────────────────────────────────────────────── */}
+      <section
+        className="border-y"
+        style={{ borderColor: 'var(--sw-outline-variant)', backgroundColor: 'var(--sw-surface-container-low)' }}
+      >
+        <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 py-10 grid grid-cols-1 md:grid-cols-3 gap-8">
+          {values.map(({ Icon, title, body }) => (
+            <div key={title} className="flex items-start gap-4">
+              <Icon className="w-5 h-5 shrink-0 mt-0.5" style={{ color: 'var(--sw-primary)' }} />
+              <div>
+                <h4 className="font-semibold text-sm mb-1" style={{ color: 'var(--sw-on-surface)', fontFamily: 'var(--font-body)' }}>
+                  {title}
+                </h4>
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--sw-on-surface-variant)' }}>
+                  {body}
+                </p>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </section>
 
-      {/* Brand Ethos Highlight */}
-      <section className="bg-neutral-50 py-24 border-y border-neutral-100">
-        <div className="max-w-3xl mx-auto px-8 text-center">
-          <Sparkles className="w-6 h-6 mx-auto text-neutral-400 mb-6" />
-          <h2 className="text-3xl font-light font-serif italic mb-6">"Simplicity is the final layer of sophistication."</h2>
-          <p className="text-neutral-500 text-sm leading-relaxed mb-8 max-w-lg mx-auto">
-            Softwear creates clothes that perform silently. No loud logos. No unnecessary decorations. Just clean cuts, ethically sourced yarns, and precise craftsmanship.
-          </p>
-          <div className="h-px w-12 bg-neutral-300 mx-auto" />
-        </div>
+      {/* ── Curated Categories ───────────────────────────────────────────────── */}
+      <section className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 py-24">
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-80px' }}
+          className="flex flex-col md:flex-row justify-between items-baseline mb-12"
+        >
+          <div>
+            <h2
+              className="text-3xl sm:text-4xl"
+              style={{ fontFamily: 'var(--font-headline)', fontWeight: 500, color: 'var(--sw-on-surface)' }}
+            >
+              Curated Portfolios
+            </h2>
+            <p className="text-xs mt-1" style={{ color: 'var(--sw-on-surface-variant)' }}>
+              Browse by structural archetype.
+            </p>
+          </div>
+          <Link
+            to="/products"
+            className="text-[11px] font-semibold tracking-widest uppercase flex items-center gap-1.5 mt-4 md:mt-0 group"
+            style={{ color: 'var(--sw-on-surface-variant)' }}
+          >
+            View All <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+          </Link>
+        </motion.div>
+
+        <motion.div
+          variants={stagger}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-60px' }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+        >
+          {categories.map((cat) => (
+            <motion.div
+              key={cat.name}
+              variants={fadeUp}
+              onClick={() => navigate(cat.link)}
+              className="group cursor-pointer relative overflow-hidden"
+              style={{ borderRadius: 'var(--sw-radius-lg)', aspectRatio: '3/4' }}
+            >
+              <img
+                src={cat.img}
+                alt={cat.name}
+                className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-106"
+                style={{ filter: 'saturate(0.7)', transition: 'transform 0.7s ease, filter 0.7s ease' }}
+                onMouseEnter={(e) => (e.currentTarget.style.filter = 'saturate(1)')}
+                onMouseLeave={(e) => (e.currentTarget.style.filter = 'saturate(0.7)')}
+              />
+              <div
+                className="absolute inset-0"
+                style={{ background: 'linear-gradient(to top, rgba(27,28,28,0.65) 0%, rgba(27,28,28,0.10) 55%, transparent 100%)' }}
+              />
+              <div className="absolute bottom-5 left-5 text-white">
+                <span
+                  className="text-[10px] tracking-[0.18em] uppercase block mb-1"
+                  style={{ color: 'var(--sw-primary-fixed-dim)', fontFamily: 'var(--font-body)' }}
+                >
+                  {cat.tagline}
+                </span>
+                <h3
+                  className="text-lg font-medium"
+                  style={{ fontFamily: 'var(--font-headline)', fontWeight: 500 }}
+                >
+                  {cat.name}
+                </h3>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
       </section>
 
-      {/* Featured Products Grid */}
-      <section className="max-w-7xl mx-auto px-8 py-24">
-        <div className="flex justify-between items-baseline mb-12">
+      {/* ── Brand Ethos ──────────────────────────────────────────────────────── */}
+      <section
+        className="py-28 border-y"
+        style={{ backgroundColor: 'var(--sw-surface-container-low)', borderColor: 'var(--sw-outline-variant)' }}
+      >
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          className="max-w-2xl mx-auto px-6 text-center"
+        >
+          {/* Sage decorative line */}
+          <div className="w-10 h-[2px] mx-auto mb-8" style={{ backgroundColor: 'var(--sw-secondary)' }} />
+          <blockquote
+            className="text-3xl sm:text-4xl mb-8 italic leading-[1.25]"
+            style={{ fontFamily: 'var(--font-headline)', fontWeight: 400, color: 'var(--sw-on-surface)' }}
+          >
+            "Simplicity is the final layer of sophistication."
+          </blockquote>
+          <p
+            className="text-sm leading-relaxed mb-8 max-w-md mx-auto"
+            style={{ color: 'var(--sw-on-surface-variant)', fontFamily: 'var(--font-body)' }}
+          >
+            Softwear creates clothes that perform silently. No loud logos. No unnecessary decorations.
+            Just clean cuts, ethically sourced yarns, and precise craftsmanship.
+          </p>
+          <div className="w-10 h-[2px] mx-auto" style={{ backgroundColor: 'var(--sw-secondary)' }} />
+        </motion.div>
+      </section>
+
+      {/* ── Featured Products ─────────────────────────────────────────────────── */}
+      <section className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 py-24">
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          className="flex justify-between items-baseline mb-12"
+        >
           <div>
-            <h2 className="text-2xl font-semibold tracking-tight">Trending Items</h2>
-            <p className="text-neutral-500 text-xs mt-1">Highly requested pieces this week.</p>
+            <h2
+              className="text-3xl sm:text-4xl"
+              style={{ fontFamily: 'var(--font-headline)', fontWeight: 500, color: 'var(--sw-on-surface)' }}
+            >
+              Trending Items
+            </h2>
+            <p className="text-xs mt-1" style={{ color: 'var(--sw-on-surface-variant)' }}>
+              Highly requested pieces this week.
+            </p>
           </div>
-          <Link to="/products" className="text-xs font-semibold tracking-widest uppercase hover:underline">
-            Browse Catalog
+          <Link
+            to="/products"
+            className="text-[11px] font-semibold tracking-widest uppercase flex items-center gap-1.5 group"
+            style={{ color: 'var(--sw-on-surface-variant)' }}
+          >
+            Browse Catalog <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
           </Link>
-        </div>
+        </motion.div>
 
         {loading ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="space-y-4 animate-pulse">
-                <div className="aspect-[3/4] bg-neutral-100" />
-                <div className="h-4 bg-neutral-100 w-2/3" />
-                <div className="h-3 bg-neutral-100 w-1/3" />
+              <div key={i} className="space-y-4">
+                <div className="skeleton" style={{ aspectRatio: '3/4', borderRadius: 'var(--sw-radius-lg)' }} />
+                <div className="skeleton h-4 w-2/3" />
+                <div className="skeleton h-3 w-1/3" />
               </div>
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+          <motion.div
+            variants={stagger}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid grid-cols-2 lg:grid-cols-4 gap-6"
+          >
             {products.slice(0, 4).map((product) => (
-              <Link 
-                to={`/products/${product._id}`} 
-                key={product._id} 
-                className="group block space-y-4"
-              >
-                <div className="aspect-[3/4] bg-neutral-50 overflow-hidden relative border border-neutral-100">
-                  {product.images?.[0]?.url ? (
-                    <img 
-                      src={product.images[0].url} 
-                      alt={product.name} 
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-neutral-100 flex items-center justify-center text-xs text-neutral-400">
-                      No Image Available
-                    </div>
-                  )}
-                  {product.discountPrice && (
-                    <span className="absolute top-3 left-3 bg-black text-white text-[9px] uppercase tracking-widest px-2.5 py-1 font-semibold">
-                      Sale
-                    </span>
-                  )}
-                </div>
-                <div>
-                  <h3 className="text-xs uppercase tracking-wider text-neutral-500 block truncate">{product.brand}</h3>
-                  <h4 className="text-sm font-medium text-neutral-900 mt-0.5 truncate group-hover:underline">{product.name}</h4>
-                  <div className="flex items-center gap-2 mt-1.5">
-                    {product.discountPrice ? (
-                      <>
-                        <span className="text-sm font-semibold text-neutral-900">₹{product.discountPrice}</span>
-                        <span className="text-xs text-neutral-400 line-through">₹{product.price}</span>
-                      </>
+              <motion.div key={product._id} variants={fadeUp}>
+                <Link to={`/products/${product._id}`} className="group block">
+                  {/* Image */}
+                  <div
+                    className="overflow-hidden mb-4 relative"
+                    style={{
+                      aspectRatio: '3/4',
+                      backgroundColor: 'var(--sw-surface-container-low)',
+                      borderRadius: 'var(--sw-radius-lg)',
+                    }}
+                  >
+                    {product.images?.[0]?.url ? (
+                      <img
+                        src={product.images[0].url}
+                        alt={product.name}
+                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                      />
                     ) : (
-                      <span className="text-sm font-semibold text-neutral-900">₹{product.price}</span>
+                      <div
+                        className="w-full h-full flex items-center justify-center text-xs"
+                        style={{ color: 'var(--sw-outline)' }}
+                      >
+                        No Image Available
+                      </div>
+                    )}
+
+                    {/* Sale badge — terracotta pill */}
+                    {product.discountPrice && (
+                      <span
+                        className="absolute top-3 left-3 text-[10px] uppercase tracking-wider px-2.5 py-1 font-semibold"
+                        style={{
+                          backgroundColor: 'var(--sw-primary)',
+                          color: 'var(--sw-on-primary)',
+                          borderRadius: 'var(--sw-radius)',
+                        }}
+                      >
+                        Sale
+                      </span>
                     )}
                   </div>
-                </div>
-              </Link>
+
+                  {/* Metadata */}
+                  <div>
+                    <span
+                      className="text-[10px] uppercase tracking-[0.15em] block truncate"
+                      style={{ color: 'var(--sw-secondary)', fontFamily: 'var(--font-body)', fontWeight: 600 }}
+                    >
+                      {product.brand}
+                    </span>
+                    <h4
+                      className="text-sm mt-0.5 truncate group-hover:underline underline-offset-2"
+                      style={{ color: 'var(--sw-on-surface)', fontFamily: 'var(--font-body)', fontWeight: 500 }}
+                    >
+                      {product.name}
+                    </h4>
+                    <div className="flex items-center gap-2 mt-1.5">
+                      {product.discountPrice ? (
+                        <>
+                          <span
+                            className="text-sm font-semibold"
+                            style={{ color: 'var(--sw-primary)' }}
+                          >
+                            ₹{product.discountPrice}
+                          </span>
+                          <span
+                            className="text-xs line-through"
+                            style={{ color: 'var(--sw-outline)' }}
+                          >
+                            ₹{product.price}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-sm font-semibold" style={{ color: 'var(--sw-on-surface)' }}>
+                          ₹{product.price}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         )}
+      </section>
+
+      {/* ── Newsletter Strip ──────────────────────────────────────────────────── */}
+      <section
+        className="py-20"
+        style={{ backgroundColor: 'var(--sw-surface-container)' }}
+      >
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          className="max-w-xl mx-auto px-6 text-center"
+        >
+          <Mail className="w-7 h-7 mx-auto mb-5" style={{ color: 'var(--sw-primary)' }} />
+          <h2
+            className="text-3xl sm:text-4xl mb-3 italic"
+            style={{ fontFamily: 'var(--font-headline)', fontWeight: 400, color: 'var(--sw-on-surface)' }}
+          >
+            Join The Softwear Circle
+          </h2>
+          <p
+            className="text-sm mb-8"
+            style={{ color: 'var(--sw-on-surface-variant)', fontFamily: 'var(--font-body)' }}
+          >
+            Early access to collections, editorial features, and members-only offers.
+          </p>
+          <form
+            className="flex gap-3 max-w-sm mx-auto"
+            onSubmit={(e) => e.preventDefault()}
+          >
+            <input
+              type="email"
+              placeholder="your@email.com"
+              className="flex-1 sw-input rounded"
+              style={{ borderRadius: 'var(--sw-radius)' }}
+              aria-label="Email address"
+            />
+            <button type="submit" className="btn-primary !px-5 !py-2.5 shrink-0">
+              Subscribe
+            </button>
+          </form>
+        </motion.div>
       </section>
     </div>
   );
