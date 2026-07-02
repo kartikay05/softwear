@@ -1,6 +1,6 @@
 import axios from "axios";
 import { store } from "../../../app/store.js";
-import { setOAuthSuccess, logoutThunk } from "../../auth/state/auth.slice.js";
+import { clearCredentials, refreshTokenThunk } from "../../auth/state/auth.slice.js";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL 
   ? import.meta.env.VITE_API_URL.replace(/\/auth$/, "") 
@@ -14,10 +14,10 @@ export const api = axios.create({
   },
 });
 
-// Request Interceptor: Attach token if available
+// Request Interceptor: Attach token if available from Redux store
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    const token = store.getState().auth.accessToken;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -69,35 +69,21 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // Call refresh token endpoint (sends and reads the httpOnly cookie)
-        const response = await axios.post(
-          `${API_BASE_URL}/auth/refresh-token`,
-          {},
-          { withCredentials: true }
-        );
+        // Dispatch refreshTokenThunk to get a new token
+        const newAccessToken = await store.dispatch(refreshTokenThunk()).unwrap();
+        
+        isRefreshing = false;
+        processQueue(null, newAccessToken);
 
-        const responseData = response.data;
-        if (responseData && responseData.success) {
-          const { user, accessToken } = responseData.data;
-
-          // Update store
-          store.dispatch(setOAuthSuccess({ user, token: accessToken }));
-
-          isRefreshing = false;
-          processQueue(null, accessToken);
-
-          // Retry original request with new token
-          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-          return api(originalRequest);
-        } else {
-          throw new Error("Refresh failed");
-        }
+        // Retry original request with new token
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        return api(originalRequest);
       } catch (refreshError) {
         isRefreshing = false;
         processQueue(refreshError, null);
 
-        // Force user logout and redirect
-        store.dispatch(logoutThunk());
+        // Force user logout by clearing credentials (components handle redirect)
+        store.dispatch(clearCredentials());
         return Promise.reject(error);
       }
     }

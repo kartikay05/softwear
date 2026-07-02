@@ -13,7 +13,7 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import cors from "cors";
 import config from "./config/config.js";
 import { errorHandler, notFound } from "./middlewares/error.middleware.js";
-
+import userModel from "./models/user.model.js";
 
 const app = express();
 
@@ -37,13 +37,28 @@ if (config.GOOGLE_CLIENT_ID && config.GOOGLE_CLIENT_SECRET) {
             clientID: config.GOOGLE_CLIENT_ID,
             clientSecret: config.GOOGLE_CLIENT_SECRET,
             callbackURL: '/api/auth/google/callback'
-        }, (accessToken, refreshToken, profile, done) => {
-            done(null, profile);
+        }, async (accessToken, refreshToken, profile, done) => {
+
+            let user = await userModel.findOne({ email: profile.emails[0].value });
+
+            if (user && user.isBlocked) {
+                return done(null, false, { message: 'AccountBlocked' });
+            }
+
+            if (!user) {
+                user = await userModel.create({
+                    email: profile.emails[0].value,
+                    name: profile.displayName,
+                    googleId: profile.id,
+                    isVerified: true, // Google se aaya hai toh verified hai
+                });
+            }
+            done(null, user);
         })
     )
 }
 
-// auth routes
+//routes
 app.use("/api/auth", authRouter);
 app.use("/api/products", productRouter);
 app.use("/api/cart", cartRouter);

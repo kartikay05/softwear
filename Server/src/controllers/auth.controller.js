@@ -1,14 +1,17 @@
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import userModel from "../models/user.model.js";
 import config from "../config/config.js";
 import ApiError from "../utils/apiError.js";
 import sendResponse from "../utils/sendResponse.js";
 import {
   clearRefreshTokenCookie,
+  issueAuthTokens,
   generateAccessToken,
-  generateRefreshToken,
-  setRefreshTokenCookie,
 } from "../utils/jwt.js";
+
+// In-memory store for OAuth codes (Use Redis in production horizontally scaled environments)
+const oauthCodesStore = new Map();
 
 function serializeUser(user) {
   return {
@@ -18,18 +21,8 @@ function serializeUser(user) {
     role: user.role,
     avatar: user.avatar,
     isBlocked: user.isBlocked,
+    isVerified: user.isVerified,
   };
-}
-
-async function issueAuthTokens(user, res) {
-  const accessToken = generateAccessToken(user);
-  const refreshToken = generateRefreshToken(user);
-
-  user.refreshToken = refreshToken;
-  await user.save({ validateBeforeSave: false });
-  setRefreshTokenCookie(res, refreshToken);
-
-  return accessToken;
 }
 
 export async function register(req, res, next) {
@@ -45,7 +38,7 @@ export async function register(req, res, next) {
     const user = await userModel.create({
       name: displayName,
       email,
-      password,
+      password, 
     });
 
     const accessToken = await issueAuthTokens(user, res);
@@ -111,10 +104,10 @@ export async function refreshToken(req, res, next) {
       return next(new ApiError(403, "Your account has been blocked"));
     }
 
-    const accessToken = await issueAuthTokens(user, res);
+    // Do NOT rotate refresh token, only issue a new access token
+    const accessToken = generateAccessToken(user);
 
     return sendResponse(res, 200, "Access token refreshed successfully", {
-      user: serializeUser(user),
       accessToken,
     });
   } catch (error) {
@@ -125,49 +118,67 @@ export async function refreshToken(req, res, next) {
 export async function googleCallback(req, res, next) {
   try {
     if (!req.user) {
-      return res.redirect(`${config.CLIENT_URL}/login?error=NoUserFromGoogle`);
+      return res.redirect(`${config.CLIENT_URL}/login?error=AuthFailed`);
     }
 
-    const { id, displayName, emails, photos } = req.user;
-    const email = emails?.[0]?.value;
-    const photo = photos?.[0]?.value;
+    const accessToken = await issueAuthTokens(req.user, res);
+    
+    // Generate one-time code
+    const code = crypto.randomBytes(32).toString('hex');
+    oauthCodesStore.set(code, {
+      accessToken,
+      expiresAt: Date.now() + 60 * 1000 // 60 seconds expiry
+    });
 
-    if (!email) {
-      return res.redirect(`${config.CLIENT_URL}/login?error=EmailRequired`);
+    // Cleanup expired codes periodically
+    for (const [key, val] of oauthCodesStore.entries()) {
+      if (val.expiresAt < Date.now()) oauthCodesStore.delete(key);
     }
 
-    let user = await userModel.findOne({ email }).select("+refreshToken");
-
-    if (user) {
-      if (user.isBlocked) {
-        return res.redirect(`${config.CLIENT_URL}/login?error=AccountBlocked`);
-      }
-
-      user.googleId = user.googleId || id;
-      user.avatar = photo || user.avatar;
-      await user.save({ validateBeforeSave: false });
-    } else {
-      user = await userModel.create({
-        email,
-        googleId: id,
-        name: displayName || "Google User",
-        avatar: photo || undefined,
-      });
-    }
-
-    const accessToken = await issueAuthTokens(user, res);
-    const redirectUrl = new URL(config.CLIENT_URL);
-    redirectUrl.searchParams.set("accessToken", accessToken);
-    res.redirect(redirectUrl.toString());
+    res.redirect(`${config.CLIENT_URL}/auth/callback?code=${code}`);
   } catch (error) {
     next(error);
   }
 }
 
-export async function getProfile(req, res) {
-  return sendResponse(res, 200, "User profile fetched successfully", {
-    user: serializeUser(req.user),
-  });
+export async function exchangeOAuthCode(req, res, next) {
+  try {
+    const { code } = req.body;
+    if (!code) {
+      return next(new ApiError(400, "Code is required"));
+    }
+
+    const storeEntry = oauthCodesStore.get(code);
+    if (!storeEntry || storeEntry.expiresAt < Date.now()) {
+      if (storeEntry) oauthCodesStore.delete(code);
+      return next(new ApiError(401, "Invalid or expired code"));
+    }
+
+    // Single use
+    oauthCodesStore.delete(code);
+
+    return sendResponse(res, 200, "OAuth token exchanged successfully", {
+      accessToken: storeEntry.accessToken,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getProfile(req, res, next) {
+  try {
+    // req.user.id from middleware
+    const user = await userModel.findById(req.user.id).select("-password -refreshToken");
+    if (!user) {
+      return next(new ApiError(404, "User not found"));
+    }
+
+    return sendResponse(res, 200, "User profile fetched successfully", {
+      user: serializeUser(user),
+    });
+  } catch (error) {
+    next(error);
+  }
 }
 
 export async function logout(req, res, next) {

@@ -1,15 +1,12 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { login as apiLogin, register as apiRegister, logout as apiLogout, getProfile } from "../service/auth.api.js";
-
-// Fetch initial state from localStorage if it exists
-const storedUser = JSON.parse(localStorage.getItem("user")) || null;
-const storedToken = localStorage.getItem("token") || null;
+import api from "../../shared/service/api.js";
 
 const initialState = {
-  user: storedUser,
-  token: storedToken,
-  isAuthenticated: !!storedUser,
-  loading: false,
+  user: null,
+  accessToken: null,
+  isAuthenticated: false,
+  loading: true, // true by default because we check auth on mount
   error: null,
 };
 
@@ -18,17 +15,13 @@ const initialState = {
  */
 export const loginThunk = createAsyncThunk(
   "auth/login",
-  async ({ email, password }, { rejectWithValue }) => {
+  async (credentials, { dispatch, rejectWithValue }) => {
     try {
-      const response = await apiLogin(email, password);
+      const response = await apiLogin(credentials.email, credentials.password);
       if (response && response.success) {
         const { user, accessToken } = response.data;
-        // Persist session to localStorage
-        localStorage.setItem("user", JSON.stringify(user));
-        if (accessToken) {
-          localStorage.setItem("token", accessToken);
-        }
-        return { user, token: accessToken };
+        dispatch(setCredentials({ user, accessToken }));
+        return { user, accessToken };
       }
       return rejectWithValue(response.message || "Failed to log in");
     } catch (err) {
@@ -43,17 +36,13 @@ export const loginThunk = createAsyncThunk(
  */
 export const registerThunk = createAsyncThunk(
   "auth/register",
-  async (userData, { rejectWithValue }) => {
+  async (userData, { dispatch, rejectWithValue }) => {
     try {
       const response = await apiRegister(userData);
       if (response && response.success) {
         const { user, accessToken } = response.data;
-        // Persist session to localStorage
-        localStorage.setItem("user", JSON.stringify(user));
-        if (accessToken) {
-          localStorage.setItem("token", accessToken);
-        }
-        return { user, token: accessToken };
+        dispatch(setCredentials({ user, accessToken }));
+        return { user, accessToken };
       }
       return rejectWithValue(response.message || "Registration failed");
     } catch (err) {
@@ -64,27 +53,58 @@ export const registerThunk = createAsyncThunk(
 );
 
 /**
- * Async Thunk to verify current session cookie / token validity on app load
+ * Async Thunk to fetch user profile
  */
-export const checkAuthThunk = createAsyncThunk(
-  "auth/checkAuth",
-  async (_, { rejectWithValue }) => {
+export const fetchProfileThunk = createAsyncThunk(
+  "auth/fetchProfile",
+  async (_, { getState, dispatch, rejectWithValue }) => {
     try {
       const response = await getProfile();
       if (response && response.success) {
         const { user } = response.data;
-        localStorage.setItem("user", JSON.stringify(user));
+        const currentToken = getState().auth.accessToken;
+        dispatch(setCredentials({ user, accessToken: currentToken }));
         return user;
       }
-      // If backend returns unsuccessful profile call, clear storage
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
-      return rejectWithValue("Session expired or invalid");
+      dispatch(clearCredentials());
+      return rejectWithValue("Failed to fetch profile");
     } catch (err) {
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
+      dispatch(clearCredentials());
       const msg = err.response?.data?.message || err.message || "Session verification failed";
       return rejectWithValue(msg);
+    }
+  }
+);
+
+/**
+ * Async Thunk for refresh token
+ */
+export const refreshTokenThunk = createAsyncThunk(
+  "auth/refreshToken",
+  async (_, { dispatch, rejectWithValue }) => {
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_URL 
+        ? import.meta.env.VITE_API_URL.replace(/\/auth$/, "") 
+        : "http://localhost:5000/api";
+
+      const response = await api.post(
+        `${API_BASE_URL}/auth/refresh-token`,
+        {},
+        { withCredentials: true }
+      );
+      
+      const responseData = response.data || response;
+      
+      if (responseData && (responseData.success || responseData.data?.accessToken)) {
+        const token = responseData.data?.accessToken || responseData.accessToken;
+        dispatch(setAccessToken(token));
+        return token;
+      }
+      dispatch(clearCredentials());
+      return rejectWithValue("Refresh failed");
+    } catch (err) {
+      dispatch(clearCredentials());
+      return rejectWithValue("Refresh failed");
     }
   }
 );
@@ -94,19 +114,28 @@ export const checkAuthThunk = createAsyncThunk(
  */
 export const logoutThunk = createAsyncThunk(
   "auth/logout",
-  async (_, { rejectWithValue }) => {
+  async (_, { dispatch, rejectWithValue }) => {
     try {
       await apiLogout();
-      // Clear persistence layer
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
+      dispatch(clearCredentials());
       return true;
     } catch (err) {
-      // Clear persistence anyway to prevent client lockouts
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
+      dispatch(clearCredentials());
       const msg = err.response?.data?.message || err.message || "Failed to log out cleanly";
       return rejectWithValue(msg);
+    }
+  }
+);
+
+export const checkAuthThunk = createAsyncThunk(
+  "auth/checkAuth",
+  async (_, { dispatch, rejectWithValue }) => {
+    try {
+      await dispatch(refreshTokenThunk()).unwrap();
+      await dispatch(fetchProfileThunk()).unwrap();
+      return true;
+    } catch (err) {
+      return rejectWithValue("Auth check failed");
     }
   }
 );
@@ -115,108 +144,56 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    // Synchronous action to reset error states
+    setCredentials: (state, action) => {
+      state.user = action.payload.user;
+      state.accessToken = action.payload.accessToken;
+      state.isAuthenticated = true;
+      state.loading = false;
+      state.error = null;
+    },
+    setAccessToken: (state, action) => {
+      state.accessToken = action.payload;
+    },
+    clearCredentials: (state) => {
+      state.user = null;
+      state.accessToken = null;
+      state.isAuthenticated = false;
+      state.loading = false;
+      state.error = null;
+    },
+    setAuthLoading: (state, action) => {
+      state.loading = action.payload;
+    },
+    setAuthError: (state, action) => {
+      state.error = action.payload;
+      state.loading = false;
+    },
+    // Backwards compatibility for existing components, points to clearErrors
     clearErrors: (state) => {
       state.error = null;
     },
-    // Synchronous action to manually update state (e.g. from Google OAuth callbacks)
     setOAuthSuccess: (state, action) => {
       state.user = action.payload.user;
-      state.token = action.payload.token || null;
+      state.accessToken = action.payload.accessToken || action.payload.token || null;
       state.isAuthenticated = !!action.payload.user;
       state.loading = false;
       state.error = null;
-      if (action.payload.user) {
-        localStorage.setItem("user", JSON.stringify(action.payload.user));
-      } else {
-        localStorage.removeItem("user");
-      }
-      if (action.payload.token) {
-        localStorage.setItem("token", action.payload.token);
-      } else {
-        localStorage.removeItem("token");
-      }
     },
   },
   extraReducers: (builder) => {
     builder
-      // Login thunk lifecycle
-      .addCase(loginThunk.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(loginThunk.fulfilled, (state, action) => {
-        state.loading = false;
-        state.isAuthenticated = true;
-        state.user = action.payload.user;
-        state.token = action.payload.token || null;
-        state.error = null;
-      })
-      .addCase(loginThunk.rejected, (state, action) => {
-        state.loading = false;
-        state.isAuthenticated = false;
-        state.user = null;
-        state.token = null;
-        state.error = action.payload;
-      })
-
-      // Register thunk lifecycle
-      .addCase(registerThunk.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(registerThunk.fulfilled, (state, action) => {
-        state.loading = false;
-        state.isAuthenticated = true;
-        state.user = action.payload.user;
-        state.token = action.payload.token || null;
-        state.error = null;
-      })
-      .addCase(registerThunk.rejected, (state, action) => {
-        state.loading = false;
-        state.isAuthenticated = false;
-        state.user = null;
-        state.token = null;
-        state.error = action.payload;
-      })
-
-      // CheckAuth thunk lifecycle
       .addCase(checkAuthThunk.pending, (state) => {
         state.loading = true;
       })
-      .addCase(checkAuthThunk.fulfilled, (state, action) => {
+      .addCase(checkAuthThunk.fulfilled, (state) => {
         state.loading = false;
-        state.isAuthenticated = true;
-        state.user = action.payload;
       })
       .addCase(checkAuthThunk.rejected, (state) => {
         state.loading = false;
-        state.isAuthenticated = false;
-        state.user = null;
-        state.token = null;
-      })
-
-      // Logout thunk lifecycle
-      .addCase(logoutThunk.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(logoutThunk.fulfilled, (state) => {
-        state.loading = false;
-        state.isAuthenticated = false;
-        state.user = null;
-        state.token = null;
-        state.error = null;
-      })
-      .addCase(logoutThunk.rejected, (state, action) => {
-        state.loading = false;
-        state.isAuthenticated = false;
-        state.user = null;
-        state.token = null;
-        state.error = action.payload;
       });
   },
 });
 
-export const { clearErrors, setOAuthSuccess } = authSlice.actions;
+export const { setCredentials, setAccessToken, clearCredentials, setAuthLoading, setAuthError, clearErrors, setOAuthSuccess } = authSlice.actions;
 
 export default authSlice.reducer;

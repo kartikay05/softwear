@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
@@ -26,6 +26,7 @@ import CartPage from '../features/cart/pages/CartPage.jsx';
 import CheckoutPage from '../features/orders/pages/CheckoutPage.jsx';
 import OrderSuccessPage from '../features/orders/pages/OrderSuccessPage.jsx';
 import ProfilePage from '../features/auth/pages/ProfilePage.jsx';
+import OAuthCallbackPage from '../features/auth/pages/OAuthCallbackPage.jsx';
 import AdminDashboard from '../features/admin/pages/AdminDashboard.jsx';
 
 // 404 Page
@@ -45,6 +46,17 @@ const AppContent = () => {
   // Silent background token refresh check every 5 minutes
   useTokenRefresh(5 * 60 * 1000);
 
+  const { loading } = useSelector((state) => state.auth);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen bg-white justify-center items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-neutral-900 mb-4"></div>
+        <p className="text-neutral-600 font-medium tracking-wide">Loading...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-white">
       <Nav />
@@ -56,6 +68,9 @@ const AppContent = () => {
           <Route path="/products/:id" element={<ProductDetailPage />} />
           <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/cart" element={<CartPage />} />
+
+          {/* OAuth Callback */}
+          <Route path="/auth/callback" element={<OAuthCallbackPage />} />
 
           {/* Protected Buyer Routes */}
           <Route 

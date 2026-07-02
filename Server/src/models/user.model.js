@@ -21,7 +21,6 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      // ✅ use an arrow fn to avoid `this` binding issues
       required: [
         function () { return !this.googleId; },
         "Password is required for non-Google accounts",
@@ -34,6 +33,10 @@ const userSchema = new mongoose.Schema(
       default: "user",
     },
     isBlocked: {
+      type: Boolean,
+      default: false,
+    },
+    isVerified: {
       type: Boolean,
       default: false,
     },

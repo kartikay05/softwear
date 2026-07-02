@@ -1,17 +1,27 @@
 import jwt from "jsonwebtoken";
 import config from "../config/config.js";
 
+// Shared getRefreshCookieOptions helper
+export function getRefreshCookieOptions() {
+  const isProd = config.NODE_ENV === "production";
+  return {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? "none" : "lax",
+    path: "/",
+  };
+}
+
 export async function issueAuthTokens(user, res) {
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
 
   user.refreshToken = refreshToken;
   await user.save({ validateBeforeSave: false });
-  // Set both refresh and access token cookies
+  
   setRefreshTokenCookie(res, refreshToken);
-  // Also set a separate access token cookie (short‑lived)
-  setAccessTokenCookie(res, accessToken);
 
+  // Return only accessToken, do not set in cookie
   return accessToken;
 }
 
@@ -31,34 +41,15 @@ export function generateRefreshToken(user) {
   );
 }
 
-export function setAccessTokenCookie(res, token) {
-  // Set HTTP‑only cookie for access token (short‑lived)
-  // Use SameSite='none' with Secure in production for cross‑origin requests; fallback to 'lax' in dev
-  const isProd = config.NODE_ENV === 'production';
-  res.cookie('accessToken', token, {
-    httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? 'none' : 'lax',
-    maxAge: 15 * 60 * 1000, // 15 minutes default or config JWT_ACCESS_EXPIRY if defined
-  });
-}
 export function setRefreshTokenCookie(res, token) {
-  // Clear first to avoid stacking
-  const isProd = config.NODE_ENV === 'production';
-  res.clearCookie('refreshToken', { httpOnly: true, sameSite: isProd ? 'none' : 'lax', secure: isProd });
-  // Use SameSite='none' with Secure in production for cross‑origin requests; fallback to 'lax' in dev
-  res.cookie('refreshToken', token, {
-    httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? 'none' : 'lax',
+  const options = getRefreshCookieOptions();
+  res.cookie("refreshToken", token, {
+    ...options,
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 }
 
 export function clearRefreshTokenCookie(res) {
-  res.clearCookie("refreshToken", {
-    httpOnly: true,
-    sameSite: "strict",
-    secure: config.NODE_ENV === "production",
-  });
+  const options = getRefreshCookieOptions();
+  res.clearCookie("refreshToken", options);
 }

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getProfile, googleCallback, login, logout, refreshToken, register } from "../controllers/auth.controller.js";
+import { getProfile, googleCallback, login, logout, refreshToken, register, exchangeOAuthCode } from "../controllers/auth.controller.js";
 import { loginValidator, registerValidator } from "../validator/auth.validator.js";
 import passport from "passport";
 import config from "../config/config.js";
@@ -11,7 +11,7 @@ const authRouter = Router();
 authRouter.post("/register", registerValidator, register);
 authRouter.post("/login", loginValidator, login);
 authRouter.post("/refresh-token", refreshToken);
-authRouter.post("/logout", logout);
+authRouter.post("/logout", verifyToken, logout);
 
 // google auth routes
 /* 
@@ -30,6 +30,8 @@ authRouter.get("/google/callback",
     passport.authenticate("google",  { session: false, failureRedirect: config.CLIENT_URL +"/login"}),
     googleCallback
 );
+
+authRouter.post("/google/exchange", exchangeOAuthCode);
 
 
 // profile route
