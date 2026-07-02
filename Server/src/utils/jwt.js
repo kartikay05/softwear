@@ -1,8 +1,7 @@
 import jwt from "jsonwebtoken";
 import config from "../config/config.js";
 
-// Shared getRefreshCookieOptions helper
-export function getRefreshCookieOptions() {
+function getCookieOptions() {
   const isProd = config.NODE_ENV === "production";
   return {
     httpOnly: true,
@@ -19,9 +18,9 @@ export async function issueAuthTokens(user, res) {
   user.refreshToken = refreshToken;
   await user.save({ validateBeforeSave: false });
   
+  setAccessTokenCookie(res, accessToken);
   setRefreshTokenCookie(res, refreshToken);
 
-  // Return only accessToken, do not set in cookie
   return accessToken;
 }
 
@@ -41,15 +40,24 @@ export function generateRefreshToken(user) {
   );
 }
 
-export function setRefreshTokenCookie(res, token) {
-  const options = getRefreshCookieOptions();
-  res.cookie("refreshToken", token, {
-    ...options,
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+export function setAccessTokenCookie(res, token) {
+  res.cookie("accessToken", token, {
+    ...getCookieOptions(),
+    maxAge: 15 * 60 * 1000,
   });
 }
 
+export function setRefreshTokenCookie(res, token) {
+  res.cookie("refreshToken", token, {
+    ...getCookieOptions(),
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+}
+
+export function clearAccessTokenCookie(res) {
+  res.clearCookie("accessToken", getCookieOptions());
+}
+
 export function clearRefreshTokenCookie(res) {
-  const options = getRefreshCookieOptions();
-  res.clearCookie("refreshToken", options);
+  res.clearCookie("refreshToken", getCookieOptions());
 }

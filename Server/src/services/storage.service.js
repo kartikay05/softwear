@@ -4,7 +4,7 @@ import config from '../config/config.js';
 let client;
 
 function getClient() {
-    if (!config.IMAGEKIT_PUBLIC_KEY || !config.IMAGEKIT_PRIVATE_KEY || !config.IMAGEKIT_URL_ENDPOINT) {
+    if (!config.IMAGEKIT_PUBLIC_KEY || !config.IMAGEKIT_PRIVATE_KEY) {
         throw new Error("ImageKit credentials are not configured");
     }
 
@@ -12,7 +12,6 @@ function getClient() {
         client = new ImageKit({
             publicKey: config.IMAGEKIT_PUBLIC_KEY,
             privateKey: config.IMAGEKIT_PRIVATE_KEY,
-            urlEndpoint: config.IMAGEKIT_URL_ENDPOINT
         });
     }
 

@@ -5,9 +5,11 @@ import config from "../config/config.js";
 import ApiError from "../utils/apiError.js";
 import sendResponse from "../utils/sendResponse.js";
 import {
+  clearAccessTokenCookie,
   clearRefreshTokenCookie,
   issueAuthTokens,
   generateAccessToken,
+  setAccessTokenCookie,
 } from "../utils/jwt.js";
 
 // In-memory store for OAuth codes (Use Redis in production horizontally scaled environments)
@@ -18,7 +20,7 @@ function serializeUser(user) {
     id: user._id,
     name: user.name,
     email: user.email,
-    role: user.role,
+    role: user.role?.toLowerCase() === "admin" ? "admin" : "user",
     avatar: user.avatar,
     isBlocked: user.isBlocked,
     isVerified: user.isVerified,
@@ -92,20 +94,26 @@ export async function refreshToken(req, res, next) {
     try {
       decoded = jwt.verify(token, config.JWT_REFRESH_SECRET);
     } catch (error) {
+      clearAccessTokenCookie(res);
+      clearRefreshTokenCookie(res);
       return next(new ApiError(401, "Invalid or expired refresh token"));
     }
 
     const user = await userModel.findById(decoded.id).select("+refreshToken");
     if (!user || user.refreshToken !== token) {
+      clearAccessTokenCookie(res);
+      clearRefreshTokenCookie(res);
       return next(new ApiError(401, "Refresh token is invalid"));
     }
 
     if (user.isBlocked) {
+      clearAccessTokenCookie(res);
+      clearRefreshTokenCookie(res);
       return next(new ApiError(403, "Your account has been blocked"));
     }
 
-    // Do NOT rotate refresh token, only issue a new access token
     const accessToken = generateAccessToken(user);
+    setAccessTokenCookie(res, accessToken);
 
     return sendResponse(res, 200, "Access token refreshed successfully", {
       accessToken,
@@ -173,6 +181,8 @@ export async function getProfile(req, res, next) {
       return next(new ApiError(404, "User not found"));
     }
 
+    res.set("Cache-Control", "no-store");
+
     return sendResponse(res, 200, "User profile fetched successfully", {
       user: serializeUser(user),
     });
@@ -192,6 +202,7 @@ export async function logout(req, res, next) {
       );
     }
 
+    clearAccessTokenCookie(res);
     clearRefreshTokenCookie(res);
     return sendResponse(res, 200, "User logged out successfully");
   } catch (error) {

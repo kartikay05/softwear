@@ -6,10 +6,8 @@ import ApiError from "../utils/apiError.js";
 export async function verifyToken(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
-    // Strictly get token from Authorization header
-    const token = authHeader && authHeader.startsWith("Bearer ")
-      ? authHeader.split(" ")[1]
-      : null;
+    const bearerMatch = authHeader?.match(/^Bearer\s+(.+)$/i);
+    const token = bearerMatch?.[1] || req.cookies?.accessToken;
 
     if (!token) {
       return next(new ApiError(401, "Access token is missing"));

@@ -67,14 +67,12 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// ✅ Hash password — use next() for safety across all Mongoose versions
-userSchema.pre("save", async function (next) {
+// Hash password before saving local-auth users.
+userSchema.pre("save", async function () {
   if (!this.isModified("password") || !this.password) return;
   this.password = await bcrypt.hash(this.password, 12);
-  // next();
 });
 
-// ✅ comparePassword — guard against undefined hash
 userSchema.methods.comparePassword = async function (candidatePassword) {
   if (!this.password) return false;
   return bcrypt.compare(candidatePassword, this.password);
