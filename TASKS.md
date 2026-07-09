@@ -59,33 +59,33 @@
 ## Phase 2 — React Frontend (User Side)
 
 ### 2.1 Setup & Config
-- [ ] Setup Axios instance with base URL + interceptors (attach token, handle 401)
-- [ ] Configure Redux store with all slices
-- [ ] Setup React Router with protected routes
-- [ ] Setup ProtectedRoute component (redirect if not logged in)
-- [ ] Setup AdminRoute component (redirect if not admin)
+- [x] Setup Axios instance with base URL + interceptors (attach token, handle 401)
+- [x] Configure Redux store with all slices
+- [x] Setup React Router with protected routes
+- [x] Setup ProtectedRoute component (redirect if not logged in)
+- [x] Setup AdminRoute component (redirect if not admin)
 
 ### 2.2 Auth Pages (Refactor Existing UI)
-- [ ] Login page — connect to API, store token in Redux, handle errors
-- [ ] Register page — connect to API
-- [ ] Google Login button — working OAuth flow
+- [x] Login page — connect to API, store token in Redux, handle errors
+- [x] Register page — connect to API
+- [x] Google Login button — working OAuth flow
 
 ### 2.3 Product Pages
-- [ ] `HomePage.jsx` — featured products, categories section, hero banner
-- [ ] `ProductListPage.jsx` — product grid, sidebar filters (category, price, rating), pagination
-- [ ] `ProductDetailPage.jsx` — images gallery, description, add to cart, reviews section
-- [ ] Product search bar — debounced input, query params
+- [x] `HomePage.jsx` — featured products, categories section, hero banner
+- [x] `ProductListPage.jsx` — product grid, sidebar filters (category, price, rating), pagination
+- [x] `ProductDetailPage.jsx` — images gallery, description, add to cart, reviews section
+- [x] Product search bar — debounced input, query params
 
 ### 2.4 Cart & Checkout
-- [ ] `CartPage.jsx` — cart items list, quantity controls, total, proceed to checkout
-- [ ] `CheckoutPage.jsx` — address form, coupon input, order summary, Pay button
-- [ ] Razorpay payment UI integration (open Razorpay modal on frontend)
-- [ ] `OrderSuccessPage.jsx` — order confirmation with order ID
+- [x] `CartPage.jsx` — cart items list, quantity controls, total, proceed to checkout
+- [x] `CheckoutPage.jsx` — address form, coupon input, order summary, Pay button
+- [x] Razorpay payment UI integration (open Razorpay modal on frontend)
+- [x] `OrderSuccessPage.jsx` — order confirmation with order ID
 
 ### 2.5 User Account
-- [ ] `OrderHistoryPage.jsx` — list of orders with status badge
-- [ ] Order detail modal/page
-- [ ] `WishlistPage.jsx` — saved products grid
+- [x] `OrderHistoryPage.jsx` — list of orders with status badge
+- [x] Order detail modal/page
+- [x] `WishlistPage.jsx` — saved products grid
 
 ---
 
@@ -206,11 +206,11 @@
 | Phase | Total Tasks | Done | Remaining |
 |---|---|---|---|
 | Phase 1 — Backend Core | 28 | 28 | 0 |
-| Phase 2 — Frontend User | 18 | 0 | 18 |
+| Phase 2 — Frontend User | 18 | 18 | 0 |
 | Phase 3 — Admin Dashboard | 22 | 0 | 22 |
 | Phase 4 — Pro Features | 16 | 0 | 16 |
 | Phase 5 — Deploy & Polish | 14 | 0 | 14 |
-| **Total** | **98** | **0** | **98** |
+| **Total** | **98** | **46** | **52** |
 
 > Update this table manually as you complete tasks.
 

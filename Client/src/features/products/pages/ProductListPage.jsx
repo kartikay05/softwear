@@ -1,7 +1,6 @@
-import React, { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useSearchParams } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, SlidersHorizontal, Search, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { fetchProductsThunk, setFilters, resetFilters, toggleWishlist } from '../state/product.slice.js';
 
@@ -9,35 +8,9 @@ export const ProductListPage = () => {
   const dispatch = useDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
   const { items: products, loading, filters, pagination, wishlist } = useSelector((state) => state.products);
+  const [searchDraft, setSearchDraft] = useState(searchParams.get('search') || '');
 
-  // Sync route query parameters with Redux store on mount or url change
-  useEffect(() => {
-    const queryParams = {
-      search: searchParams.get('search') || '',
-      category: searchParams.get('category') || '',
-      minPrice: searchParams.get('minPrice') || '',
-      maxPrice: searchParams.get('maxPrice') || '',
-      sort: searchParams.get('sort') || '',
-      page: Number(searchParams.get('page')) || 1,
-    };
-    dispatch(setFilters(queryParams));
-  }, [searchParams, dispatch]);
-
-  // Trigger API fetch whenever filters change in store
-  useEffect(() => {
-    const cleanParams = {};
-    if (filters.search) cleanParams.search = filters.search;
-    if (filters.category) cleanParams.category = filters.category;
-    if (filters.minPrice) cleanParams.minPrice = filters.minPrice;
-    if (filters.maxPrice) cleanParams.maxPrice = filters.maxPrice;
-    if (filters.sort) cleanParams.sort = filters.sort;
-    if (filters.page) cleanParams.page = filters.page;
-    cleanParams.limit = 8; // Fetch 8 products per page
-
-    dispatch(fetchProductsThunk(cleanParams));
-  }, [filters, dispatch]);
-
-  const updateQueryParams = (newFilters) => {
+  const updateQueryParams = useCallback((newFilters) => {
     const nextParams = new URLSearchParams(searchParams);
     Object.entries(newFilters).forEach(([key, val]) => {
       if (val) {
@@ -47,7 +20,46 @@ export const ProductListPage = () => {
       }
     });
     setSearchParams(nextParams);
-  };
+  }, [searchParams, setSearchParams]);
+
+  // Sync route query parameters with Redux store on mount or url change
+  useEffect(() => {
+    const queryParams = {
+      search: searchParams.get('search') || '',
+      category: searchParams.get('category') || '',
+      minPrice: searchParams.get('minPrice') || '',
+      maxPrice: searchParams.get('maxPrice') || '',
+      minRating: searchParams.get('minRating') || '',
+      sort: searchParams.get('sort') || '',
+      page: Number(searchParams.get('page')) || 1,
+    };
+    dispatch(setFilters(queryParams));
+  }, [searchParams, dispatch]);
+
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      if (searchDraft !== filters.search) {
+        updateQueryParams({ search: searchDraft, page: 1 });
+      }
+    }, 400);
+
+    return () => clearTimeout(handle);
+  }, [searchDraft, filters.search, updateQueryParams]);
+
+  // Trigger API fetch whenever filters change in store
+  useEffect(() => {
+    const cleanParams = {};
+    if (filters.search) cleanParams.search = filters.search;
+    if (filters.category) cleanParams.category = filters.category;
+    if (filters.minPrice) cleanParams.minPrice = filters.minPrice;
+    if (filters.maxPrice) cleanParams.maxPrice = filters.maxPrice;
+    if (filters.minRating) cleanParams.minRating = filters.minRating;
+    if (filters.sort) cleanParams.sort = filters.sort;
+    if (filters.page) cleanParams.page = filters.page;
+    cleanParams.limit = 8; // Fetch 8 products per page
+
+    dispatch(fetchProductsThunk(cleanParams));
+  }, [filters, dispatch]);
 
   const handleFilterChange = (key, value) => {
     updateQueryParams({ [key]: value, page: 1 });
@@ -55,6 +67,7 @@ export const ProductListPage = () => {
 
   const handleReset = () => {
     dispatch(resetFilters());
+    setSearchDraft('');
     setSearchParams({});
   };
 
@@ -102,8 +115,8 @@ export const ProductListPage = () => {
               <input 
                 type="text" 
                 placeholder="Keywords..."
-                value={filters.search}
-                onChange={(e) => handleFilterChange('search', e.target.value)}
+                value={searchDraft}
+                onChange={(e) => setSearchDraft(e.target.value)}
                 className="w-full text-xs py-2.5 pl-3 pr-8 border border-neutral-200 focus:outline-none focus:border-neutral-900 rounded-none bg-neutral-50/50"
               />
               <Search className="w-4 h-4 text-neutral-400 absolute right-2.5 top-3" />
@@ -145,6 +158,21 @@ export const ProductListPage = () => {
                 className="w-1/2 text-xs py-2 px-3 border border-neutral-200 focus:outline-none focus:border-neutral-900 rounded-none"
               />
             </div>
+          </div>
+
+          {/* Rating Filter */}
+          <div className="space-y-2">
+            <label className="text-[10px] tracking-wider uppercase font-semibold text-neutral-400">Minimum Rating</label>
+            <select
+              value={filters.minRating}
+              onChange={(e) => handleFilterChange('minRating', e.target.value)}
+              className="w-full text-xs py-2.5 px-3 border border-neutral-200 focus:outline-none focus:border-neutral-900 rounded-none bg-white"
+            >
+              <option value="">Any rating</option>
+              <option value="4">4 stars and above</option>
+              <option value="3">3 stars and above</option>
+              <option value="2">2 stars and above</option>
+            </select>
           </div>
 
           {/* Sorting Dropdown */}

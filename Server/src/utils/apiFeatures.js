@@ -32,6 +32,10 @@ class ApiFeatures {
             if (this.queryString.maxPrice) filters.price.$lte = Number(this.queryString.maxPrice);
         }
 
+        if (this.queryString.minRating) {
+            filters["ratings.average"] = { $gte: Number(this.queryString.minRating) };
+        }
+
         this.query = this.query.find(filters);
         return this;
     }

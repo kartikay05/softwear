@@ -83,26 +83,16 @@ export const refreshTokenThunk = createAsyncThunk(
   "auth/refreshToken",
   async (_, { dispatch, rejectWithValue }) => {
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_URL 
-        ? import.meta.env.VITE_API_URL.replace(/\/auth$/, "") 
-        : "http://localhost:5000/api";
+      const response = await api.post("/auth/refresh-token");
 
-      const response = await api.post(
-        `${API_BASE_URL}/auth/refresh-token`,
-        {},
-        { withCredentials: true }
-      );
-      
-      const responseData = response.data || response;
-      
-      if (responseData && (responseData.success || responseData.data?.accessToken)) {
-        const token = responseData.data?.accessToken || responseData.accessToken;
+      if (response?.success && response.data?.accessToken) {
+        const token = response.data.accessToken;
         dispatch(setAccessToken(token));
         return token;
       }
       dispatch(clearCredentials());
       return rejectWithValue("Refresh failed");
-    } catch (err) {
+    } catch {
       dispatch(clearCredentials());
       return rejectWithValue("Refresh failed");
     }
@@ -134,7 +124,7 @@ export const checkAuthThunk = createAsyncThunk(
       await dispatch(refreshTokenThunk()).unwrap();
       await dispatch(fetchProfileThunk()).unwrap();
       return true;
-    } catch (err) {
+    } catch {
       return rejectWithValue("Auth check failed");
     }
   }

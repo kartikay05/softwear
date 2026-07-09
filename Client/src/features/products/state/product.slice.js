@@ -20,6 +20,7 @@ const initialState = {
     category: "",
     minPrice: "",
     maxPrice: "",
+    minRating: "",
     sort: "",
     page: 1,
   },

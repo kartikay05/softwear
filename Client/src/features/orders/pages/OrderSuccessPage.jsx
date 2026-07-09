@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
+import { motion } from 'framer-motion';
 import { CheckCircle2, ArrowRight, ShoppingBag } from 'lucide-react';
 import { clearCartThunk } from '../../cart/state/cart.slice.js';
 

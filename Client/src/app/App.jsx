@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
 // Styling
@@ -26,6 +26,7 @@ import CartPage from '../features/cart/pages/CartPage.jsx';
 import CheckoutPage from '../features/orders/pages/CheckoutPage.jsx';
 import OrderSuccessPage from '../features/orders/pages/OrderSuccessPage.jsx';
 import ProfilePage from '../features/auth/pages/ProfilePage.jsx';
+import AuthPage from '../features/auth/pages/AuthPage.jsx';
 import OAuthCallbackPage from '../features/auth/pages/OAuthCallbackPage.jsx';
 import AdminDashboard from '../features/admin/pages/AdminDashboard.jsx';
 
@@ -70,6 +71,8 @@ const AppContent = () => {
           <Route path="/cart" element={<CartPage />} />
 
           {/* OAuth Callback */}
+          <Route path="/login" element={<AuthPage initialView="login" />} />
+          <Route path="/register" element={<AuthPage initialView="register" />} />
           <Route path="/auth/callback" element={<OAuthCallbackPage />} />
 
           {/* Protected Buyer Routes */}
