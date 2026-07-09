@@ -12,6 +12,7 @@ export const ProfilePage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useSelector((state) => state.auth);
+  console.log(user);
   const { orders, loading: ordersLoading } = useSelector((state) => state.orders);
 
   // Active Tab: 'profile' | 'orders' | 'addresses'
@@ -130,6 +131,7 @@ export const ProfilePage = () => {
                   <div>
                     <label className="text-[10px] tracking-wider uppercase font-semibold text-neutral-400">Full Name</label>
                     <p className="text-sm font-medium mt-1 text-neutral-800">{user?.fullName || user?.name || "N/A"}</p>
+                    
                   </div>
                   <div>
                     <label className="text-[10px] tracking-wider uppercase font-semibold text-neutral-400">Email Address</label>

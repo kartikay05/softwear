@@ -4,6 +4,48 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, Loader2, AlertCircle } from 'lucide-react';
 import { useLogin } from '../hooks/index.js';
 
+const inputBase = {
+  width: '100%',
+  paddingLeft: '2.5rem',
+  paddingRight: '0.875rem',
+  paddingTop: '0.625rem',
+  paddingBottom: '0.625rem',
+  border: '1.5px solid var(--color-outline-variant)',
+  borderRadius: 'var(--radius)',
+  background: 'var(--color-surface-container-low)',
+  color: 'var(--color-on-surface)',
+  fontSize: '0.875rem',
+  fontFamily: 'var(--font-body)',
+  outline: 'none',
+  transition: 'border-color 150ms ease',
+  boxSizing: 'border-box',
+};
+
+const InputField = ({ icon: Icon, error, children, label }) => (
+  <div>
+    <label
+      className="text-label-sm block mb-1.5"
+      style={{ color: 'var(--color-on-surface-variant)' }}
+    >
+      {label}
+    </label>
+    <div className="relative">
+      <div
+        className="absolute inset-y-0 left-0 flex items-center pointer-events-none"
+        style={{ paddingLeft: '0.75rem' }}
+      >
+        <Icon size={16} style={{ color: 'var(--color-on-surface-variant)' }} />
+      </div>
+      {children}
+    </div>
+    {error && (
+      <p className="text-body-sm mt-1" style={{ color: 'var(--color-error)' }}>
+        {error}
+      </p>
+    )}
+  </div>
+);
+
 export const LoginForm = ({ onSuccess }) => {
   const { login, loading, error } = useLogin();
   const { register, handleSubmit, formState: { errors } } = useForm();
@@ -12,69 +54,69 @@ export const LoginForm = ({ onSuccess }) => {
     try {
       await login(data.email, data.password);
       if (onSuccess) onSuccess();
-    } catch (err) {
-      // Error is handled by hook
-    }
+    } catch (_) { /* handled by hook */ }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      {/* Server error */}
       <AnimatePresence>
         {error && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="flex items-center gap-2 p-3 text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg"
+            exit={{ opacity: 0 }}
+            className="flex items-center gap-2 p-3"
+            style={{
+              background: 'var(--color-error-container)',
+              borderRadius: 'var(--radius)',
+              color: 'var(--color-error)',
+            }}
           >
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <p>{error}</p>
+            <AlertCircle size={15} style={{ flexShrink: 0 }} />
+            <p className="text-body-sm">{error}</p>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-neutral-700">Email address</label>
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Mail className="h-5 w-5 text-neutral-400" />
-          </div>
-          <input
-            {...register('email', { 
-              required: 'Email is required',
-              pattern: { value: /\S+@\S+\.\S+/, message: 'Invalid email format' }
-            })}
-            type="email"
-            className="block w-full pl-10 pr-3 py-2.5 border border-neutral-200 rounded-xl bg-neutral-50/50 text-neutral-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all sm:text-sm"
-            placeholder="you@example.com"
-          />
-        </div>
-        {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>}
-      </div>
+      {/* Email */}
+      <InputField icon={Mail} label="Email address" error={errors.email?.message}>
+        <input
+          {...register('email', {
+            required: 'Email is required',
+            pattern: { value: /\S+@\S+\.\S+/, message: 'Invalid email format' },
+          })}
+          type="email"
+          style={inputBase}
+          placeholder="you@example.com"
+          onFocus={(e)  => { e.target.style.borderColor = 'var(--color-primary-container)'; }}
+          onBlur={(e)   => { e.target.style.borderColor = errors.email ? 'var(--color-error)' : 'var(--color-outline-variant)'; }}
+        />
+      </InputField>
 
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-neutral-700">Password</label>
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Lock className="h-5 w-5 text-neutral-400" />
-          </div>
-          <input
-            {...register('password', { required: 'Password is required' })}
-            type="password"
-            className="block w-full pl-10 pr-3 py-2.5 border border-neutral-200 rounded-xl bg-neutral-50/50 text-neutral-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all sm:text-sm"
-            placeholder="••••••••"
-          />
-        </div>
-        {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password.message}</p>}
-      </div>
+      {/* Password */}
+      <InputField icon={Lock} label="Password" error={errors.password?.message}>
+        <input
+          {...register('password', { required: 'Password is required' })}
+          type="password"
+          style={inputBase}
+          placeholder="••••••••"
+          onFocus={(e)  => { e.target.style.borderColor = 'var(--color-primary-container)'; }}
+          onBlur={(e)   => { e.target.style.borderColor = errors.password ? 'var(--color-error)' : 'var(--color-outline-variant)'; }}
+        />
+      </InputField>
 
+      {/* Submit */}
       <button
         type="submit"
         disabled={loading}
-        className="w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-neutral-900 hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-900 disabled:opacity-70 disabled:cursor-not-allowed transition-all mt-6"
+        className="btn btn-primary w-full mt-2"
+        style={{ justifyContent: 'center' }}
       >
-        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign In'}
+        {loading ? <Loader2 size={16} className="animate-spin" /> : 'Sign In'}
       </button>
     </form>
   );
 };
+
+export default LoginForm;

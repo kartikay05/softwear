@@ -1,7 +1,8 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { Heart, ShoppingBag, ArrowRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Heart, ArrowRight, Package } from 'lucide-react';
 import { toggleWishlist } from '../state/product.slice.js';
 
 export const WishlistPage = () => {
@@ -9,95 +10,120 @@ export const WishlistPage = () => {
   const { wishlist } = useSelector((state) => state.products);
 
   return (
-    <div className="bg-white min-h-screen text-neutral-900 pb-20">
+    <div style={{ background: 'var(--color-background)', minHeight: '100vh' }}>
       {/* Header */}
-      <section className="border-b border-neutral-100 py-12 bg-neutral-50/50">
-        <div className="max-w-7xl mx-auto px-8">
-          <h1 className="text-4xl font-light font-serif italic tracking-wide text-neutral-900">
+      <section style={{ borderBottom: '1px solid var(--color-outline-variant)', background: 'var(--color-surface-container-low)' }}>
+        <div className="page-container py-10">
+          <h1 className="text-headline-lg" style={{ color: 'var(--color-on-surface)', fontStyle: 'italic' }}>
             My Wishlist
           </h1>
-          <p className="text-neutral-500 text-xs mt-1">
-            {wishlist.length || 0} saved profiles
+          <p className="text-body-sm mt-1" style={{ color: 'var(--color-on-surface-variant)' }}>
+            {wishlist.length} saved piece{wishlist.length !== 1 ? 's' : ''}
           </p>
         </div>
       </section>
 
-      {/* Grid */}
-      <section className="max-w-7xl mx-auto px-8 py-12">
+      <div className="page-container py-12">
         {wishlist.length === 0 ? (
-          <div className="text-center py-24 bg-neutral-50/50 border border-dashed border-neutral-200">
-            <Heart className="w-8 h-8 text-neutral-300 mx-auto mb-4" />
-            <h2 className="text-base font-semibold mb-1">Your wishlist is empty</h2>
-            <p className="text-neutral-400 text-xs mb-6">Explore the collections and save your favorite pieces.</p>
-            <Link 
-              to="/products" 
-              className="px-6 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-semibold tracking-widest uppercase"
-            >
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="empty-state"
+            style={{ minHeight: '50vh' }}
+          >
+            <Heart size={48} style={{ color: 'var(--color-outline-variant)' }} />
+            <h3>Your Wishlist is Empty</h3>
+            <p className="text-body-sm mt-1 mb-6" style={{ color: 'var(--color-on-surface-variant)' }}>
+              Explore the collections and save your favorite pieces.
+            </p>
+            <Link to="/products" className="btn btn-primary">
               Shop Collections
             </Link>
-          </div>
+          </motion.div>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            {wishlist.map((product) => (
-              <div key={product._id} className="group relative space-y-4">
-                <div className="aspect-[3/4] bg-neutral-50 overflow-hidden relative border border-neutral-100">
-                  <Link to={`/products/${product._id}`} className="block w-full h-full">
-                    {product.images?.[0]?.url ? (
-                      <img 
-                        src={product.images[0].url} 
-                        alt={product.name} 
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-neutral-100 flex items-center justify-center text-xs text-neutral-400">
-                        No Image
-                      </div>
-                    )}
-                  </Link>
-
-                  {/* Remove Button */}
-                  <button
-                    onClick={() => dispatch(toggleWishlist(product))}
-                    className="absolute top-3 right-3 p-2 bg-white/95 backdrop-blur-sm rounded-full shadow-sm text-red-500 hover:scale-105 transition-transform"
-                    title="Remove from wishlist"
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+            <AnimatePresence>
+              {wishlist.map((product, i) => (
+                <motion.div
+                  key={product._id}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ delay: i * 0.06, duration: 0.35 }}
+                  className="group"
+                >
+                  {/* Image */}
+                  <div
+                    className="product-card-img relative overflow-hidden"
+                    style={{
+                      aspectRatio: '3/4',
+                      background: 'var(--color-surface-container-low)',
+                      borderRadius: 'var(--radius-md)',
+                      border: '1px solid var(--color-outline-variant)',
+                    }}
                   >
-                    <Heart className="w-3.5 h-3.5 fill-current" />
-                  </button>
+                    <Link to={`/products/${product._id}`} className="block w-full h-full" style={{ textDecoration: 'none' }}>
+                      {product.images?.[0]?.url ? (
+                        <img src={product.images[0].url} alt={product.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center" style={{ color: 'var(--color-on-surface-variant)' }}>
+                          <Package size={28} opacity={0.3} />
+                        </div>
+                      )}
+                    </Link>
 
-                  {product.discountPrice && (
-                    <span className="absolute top-3 left-3 bg-black text-white text-[9px] uppercase tracking-widest px-2.5 py-1 font-semibold">
-                      Sale
-                    </span>
-                  )}
-                </div>
-
-                <div>
-                  <h3 className="text-[10px] uppercase tracking-wider text-neutral-400 block truncate">{product.brand}</h3>
-                  <Link to={`/products/${product._id}`}>
-                    <h4 className="text-sm font-medium text-neutral-900 mt-0.5 truncate hover:underline">{product.name}</h4>
-                  </Link>
-                  <div className="flex items-center gap-2 mt-1">
-                    {product.discountPrice ? (
-                      <>
-                        <span className="text-sm font-semibold text-neutral-900">₹{product.discountPrice}</span>
-                        <span className="text-xs text-neutral-400 line-through">₹{product.price}</span>
-                      </>
-                    ) : (
-                      <span className="text-sm font-semibold text-neutral-900">₹{product.price}</span>
+                    {product.discountPrice && (
+                      <span className="absolute top-3 left-3 badge badge-primary">Sale</span>
                     )}
+
+                    {/* Remove heart */}
+                    <button
+                      onClick={() => dispatch(toggleWishlist(product))}
+                      className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center transition-all duration-200"
+                      style={{
+                        background: 'rgba(252,249,248,0.92)',
+                        borderRadius: 'var(--radius-full)',
+                        border: '1px solid var(--color-outline-variant)',
+                        backdropFilter: 'blur(4px)',
+                      }}
+                      title="Remove from wishlist"
+                    >
+                      <Heart size={14} style={{ fill: 'var(--color-primary-container)', color: 'var(--color-primary-container)' }} />
+                    </button>
                   </div>
-                  <Link
-                    to={`/products/${product._id}`}
-                    className="text-[10px] uppercase font-semibold tracking-wider text-neutral-900 hover:text-neutral-500 flex items-center gap-1 mt-3 transition-colors"
-                  >
-                    View Details <ArrowRight className="w-3 h-3" />
-                  </Link>
-                </div>
-              </div>
-            ))}
+
+                  {/* Info */}
+                  <div className="mt-3 px-0.5">
+                    <p className="text-label-sm" style={{ color: 'var(--color-on-surface-variant)' }}>{product.brand}</p>
+                    <Link to={`/products/${product._id}`} style={{ textDecoration: 'none' }}>
+                      <h4 className="text-body-sm font-semibold mt-0.5 truncate" style={{ color: 'var(--color-on-surface)' }}>
+                        {product.name}
+                      </h4>
+                    </Link>
+                    <div className="flex items-center gap-2 mt-1.5">
+                      {product.discountPrice ? (
+                        <>
+                          <span className="text-body-sm font-semibold" style={{ color: 'var(--color-primary)' }}>₹{product.discountPrice}</span>
+                          <span className="text-body-sm line-through" style={{ color: 'var(--color-on-surface-variant)', opacity: 0.6 }}>₹{product.price}</span>
+                        </>
+                      ) : (
+                        <span className="text-body-sm font-semibold" style={{ color: 'var(--color-on-surface)' }}>₹{product.price}</span>
+                      )}
+                    </div>
+                    <Link
+                      to={`/products/${product._id}`}
+                      className="flex items-center gap-1 mt-3 text-label-sm transition-colors duration-150 group"
+                      style={{ color: 'var(--color-primary-container)', textDecoration: 'none' }}
+                    >
+                      View Details <ArrowRight size={11} className="group-hover:translate-x-0.5 transition-transform" />
+                    </Link>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         )}
-      </section>
+      </div>
     </div>
   );
 };

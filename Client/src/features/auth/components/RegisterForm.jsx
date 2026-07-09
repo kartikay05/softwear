@@ -4,171 +4,253 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, User, Phone, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useRegister } from '../hooks/index.js';
 
+const inputBase = {
+  width: '100%',
+  paddingLeft: '2.5rem',
+  paddingRight: '0.875rem',
+  paddingTop: '0.625rem',
+  paddingBottom: '0.625rem',
+  border: '1.5px solid var(--color-outline-variant)',
+  borderRadius: 'var(--radius)',
+  background: 'var(--color-surface-container-low)',
+  color: 'var(--color-on-surface)',
+  fontSize: '0.875rem',
+  fontFamily: 'var(--font-body)',
+  outline: 'none',
+  transition: 'border-color 150ms ease',
+  boxSizing: 'border-box',
+};
+
+const InputField = ({ icon: Icon, error, children, label }) => (
+  <div>
+    <label
+      className="text-label-sm block mb-1.5"
+      style={{ color: 'var(--color-on-surface-variant)' }}
+    >
+      {label}
+    </label>
+    <div className="relative">
+      <div
+        className="absolute inset-y-0 left-0 flex items-center pointer-events-none"
+        style={{ paddingLeft: '0.75rem' }}
+      >
+        <Icon size={16} style={{ color: 'var(--color-on-surface-variant)' }} />
+      </div>
+      {children}
+    </div>
+    {error && (
+      <p className="text-body-sm mt-1" style={{ color: 'var(--color-error)', fontSize: '0.75rem' }}>
+        {error}
+      </p>
+    )}
+  </div>
+);
+
+const STRENGTH_COLORS = [
+  'var(--color-surface-container-high)',
+  'var(--color-error)',
+  '#e67e22',
+  '#f39c12',
+  'var(--color-secondary)',
+  'var(--color-success)',
+];
+
+const STRENGTH_LABELS = ['', 'Weak', 'Fair', 'Good', 'Strong', 'Very Strong'];
+
 export const RegisterForm = ({ onSuccess }) => {
   const { register: registerUser, loading, error } = useRegister();
   const { register, handleSubmit, watch, formState: { errors } } = useForm();
   const [success, setSuccess] = useState(false);
 
-  const password = watch("password", "");
-  
-  // Simple password strength calculator
-  const getStrength = (pass) => {
-    let score = 0;
-    if (pass.length > 5) score += 1;
-    if (pass.length > 8) score += 1;
-    if (/[A-Z]/.test(pass)) score += 1;
-    if (/[0-9]/.test(pass)) score += 1;
-    if (/[^A-Za-z0-9]/.test(pass)) score += 1;
-    return score;
+  const password = watch('password', '');
+
+  const getStrength = (p) => {
+    let s = 0;
+    if (p.length > 5)          s++;
+    if (p.length > 8)          s++;
+    if (/[A-Z]/.test(p))       s++;
+    if (/[0-9]/.test(p))       s++;
+    if (/[^A-Za-z0-9]/.test(p))s++;
+    return s;
   };
-  
   const strengthScore = getStrength(password);
-  const strengthColors = ["bg-neutral-200", "bg-red-400", "bg-orange-400", "bg-amber-400", "bg-emerald-400", "bg-emerald-500"];
-  const currentStrengthColor = password.length > 0 ? strengthColors[strengthScore] : "bg-neutral-200";
+  const strengthColor = password.length > 0
+    ? STRENGTH_COLORS[strengthScore]
+    : STRENGTH_COLORS[0];
 
   const onSubmit = async (data) => {
     try {
       await registerUser(data);
       setSuccess(true);
-      setTimeout(() => {
-        if (onSuccess) onSuccess();
-      }, 1500);
-    } catch (err) {
-      // Error handled by hook
-    }
+      setTimeout(() => { if (onSuccess) onSuccess(); }, 1800);
+    } catch (_) { /* handled by hook */ }
   };
 
+  // ── Success state ──
   if (success) {
     return (
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="flex flex-col items-center justify-center py-8 text-center space-y-4"
+        className="flex flex-col items-center justify-center py-8 text-center gap-4"
       >
-        <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center">
-          <CheckCircle2 className="w-8 h-8" />
+        <div
+          className="w-16 h-16 flex items-center justify-center"
+          style={{
+            background: 'var(--color-success-container)',
+            borderRadius: 'var(--radius-full)',
+            color: 'var(--color-success)',
+          }}
+        >
+          <CheckCircle2 size={32} />
         </div>
         <div>
-          <h3 className="text-xl font-medium text-neutral-900">Welcome to Softwear</h3>
-          <p className="text-neutral-500 text-sm mt-1">Your account has been created successfully.</p>
+          <h3 className="text-headline-sm" style={{ color: 'var(--color-on-surface)' }}>
+            Welcome to Softwear
+          </h3>
+          <p className="text-body-sm mt-1" style={{ color: 'var(--color-on-surface-variant)' }}>
+            Your account was created successfully.
+          </p>
         </div>
       </motion.div>
     );
   }
 
+  const focusHandler  = (e) => { e.target.style.borderColor = 'var(--color-primary-container)'; };
+  const blurHandler   = (fieldErr) => (e) => {
+    e.target.style.borderColor = fieldErr ? 'var(--color-error)' : 'var(--color-outline-variant)';
+  };
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      {/* Server error */}
       <AnimatePresence>
         {error && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="flex items-center gap-2 p-3 text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg"
+            exit={{ opacity: 0 }}
+            className="flex items-center gap-2 p-3"
+            style={{
+              background: 'var(--color-error-container)',
+              borderRadius: 'var(--radius)',
+              color: 'var(--color-error)',
+            }}
           >
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <p>{error}</p>
+            <AlertCircle size={15} style={{ flexShrink: 0 }} />
+            <p className="text-body-sm">{error}</p>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-neutral-700">Full Name</label>
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <User className="h-5 w-5 text-neutral-400" />
-          </div>
-          <input
-            {...register('fullName', { required: 'Full name is required', minLength: { value: 3, message: 'Min 3 characters' }})}
-            type="text"
-            className="block w-full pl-10 pr-3 py-2.5 border border-neutral-200 rounded-xl bg-neutral-50/50 text-neutral-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all sm:text-sm"
-            placeholder="John Doe"
-          />
-        </div>
-        {errors.fullName && <p className="text-xs text-red-500 mt-1">{errors.fullName.message}</p>}
-      </div>
+      {/* Full Name */}
+      <InputField icon={User} label="Full Name" error={errors.fullName?.message}>
+        <input
+          {...register('fullName', { required: 'Full name is required', minLength: { value: 3, message: 'Min 3 characters' } })}
+          type="text"
+          style={inputBase}
+          placeholder="Jane Doe"
+          onFocus={focusHandler}
+          onBlur={blurHandler(errors.fullName)}
+        />
+      </InputField>
 
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-neutral-700">Email address</label>
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Mail className="h-5 w-5 text-neutral-400" />
-          </div>
-          <input
-            {...register('email', { 
-              required: 'Email is required',
-              pattern: { value: /\S+@\S+\.\S+/, message: 'Invalid email format' }
-            })}
-            type="email"
-            className="block w-full pl-10 pr-3 py-2.5 border border-neutral-200 rounded-xl bg-neutral-50/50 text-neutral-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all sm:text-sm"
-            placeholder="you@example.com"
-          />
-        </div>
-        {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>}
-      </div>
+      {/* Email */}
+      <InputField icon={Mail} label="Email address" error={errors.email?.message}>
+        <input
+          {...register('email', {
+            required: 'Email is required',
+            pattern: { value: /\S+@\S+\.\S+/, message: 'Invalid email format' },
+          })}
+          type="email"
+          style={inputBase}
+          placeholder="you@example.com"
+          onFocus={focusHandler}
+          onBlur={blurHandler(errors.email)}
+        />
+      </InputField>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-neutral-700">Password</label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Lock className="h-5 w-5 text-neutral-400" />
+      {/* Password — full width on mobile, responsive */}
+      <InputField icon={Lock} label="Password" error={errors.password?.message}>
+        <input
+          {...register('password', { required: 'Password is required', minLength: { value: 6, message: 'Min 6 characters' } })}
+          type="password"
+          style={inputBase}
+          placeholder="••••••••"
+          onFocus={focusHandler}
+          onBlur={blurHandler(errors.password)}
+        />
+        {/* Strength indicator */}
+        {password.length > 0 && (
+          <div className="flex items-center gap-2 mt-1.5">
+            <div className="flex gap-1 flex-1 h-1">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div
+                  key={i}
+                  className="flex-1 rounded-full transition-colors duration-300"
+                  style={{
+                    background: i <= strengthScore ? strengthColor : 'var(--color-surface-container-high)',
+                  }}
+                />
+              ))}
             </div>
-            <input
-              {...register('password', { required: 'Password is required', minLength: { value: 6, message: 'Min 6 chars' } })}
-              type="password"
-              className="block w-full pl-10 pr-3 py-2.5 border border-neutral-200 rounded-xl bg-neutral-50/50 text-neutral-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all sm:text-sm"
-              placeholder="••••••••"
-            />
+            <span
+              className="text-body-sm flex-shrink-0"
+              style={{ fontSize: '0.7rem', color: strengthColor, fontWeight: 600 }}
+            >
+              {STRENGTH_LABELS[strengthScore]}
+            </span>
           </div>
-          {/* Password Strength Indicator */}
-          <div className="flex gap-1 mt-1.5 h-1">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className={`flex-1 rounded-full ${i <= Math.max(1, strengthScore) && password.length > 0 ? currentStrengthColor : 'bg-neutral-200'} transition-colors duration-300`} />
-            ))}
-          </div>
-          {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password.message}</p>}
-        </div>
+        )}
+      </InputField>
 
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-neutral-700">Contact</label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Phone className="h-5 w-5 text-neutral-400" />
-            </div>
-            <input
-              {...register('contact', { 
-                required: 'Phone is required',
-                pattern: { value: /^\d{10}$/, message: 'Must be 10 digits' }
-              })}
-              type="tel"
-              className="block w-full pl-10 pr-3 py-2.5 border border-neutral-200 rounded-xl bg-neutral-50/50 text-neutral-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all sm:text-sm"
-              placeholder="10-digit number"
-            />
-          </div>
-          {errors.contact && <p className="text-xs text-red-500 mt-1">{errors.contact.message}</p>}
-        </div>
-      </div>
+      {/* Contact — full width so it's readable on mobile */}
+      <InputField icon={Phone} label="Phone Number" error={errors.contact?.message}>
+        <input
+          {...register('contact', {
+            required: 'Phone is required',
+            pattern: { value: /^\d{10}$/, message: 'Must be 10 digits' },
+          })}
+          type="tel"
+          style={inputBase}
+          placeholder="10-digit number"
+          onFocus={focusHandler}
+          onBlur={blurHandler(errors.contact)}
+        />
+      </InputField>
 
-      <div className="flex items-center gap-2 pt-1">
+      {/* Seller checkbox */}
+      <div className="flex items-center gap-3 pt-1">
         <input
           {...register('isSeller')}
           type="checkbox"
           id="isSeller"
-          className="w-4 h-4 text-neutral-900 bg-neutral-100 border-neutral-300 rounded focus:ring-neutral-900 focus:ring-2 cursor-pointer"
+          className="w-4 h-4 cursor-pointer"
+          style={{
+            accentColor: 'var(--color-primary-container)',
+            borderRadius: 'var(--radius-sm)',
+          }}
         />
-        <label htmlFor="isSeller" className="text-sm text-neutral-600 cursor-pointer select-none">
-          Register as Seller account
+        <label
+          htmlFor="isSeller"
+          className="text-body-sm cursor-pointer select-none"
+          style={{ color: 'var(--color-on-surface-variant)' }}
+        >
+          Register as a Seller account
         </label>
       </div>
 
+      {/* Submit */}
       <button
         type="submit"
         disabled={loading}
-        className="w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-neutral-900 hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-900 disabled:opacity-70 disabled:cursor-not-allowed transition-all mt-6"
+        className="btn btn-primary w-full mt-2"
+        style={{ justifyContent: 'center' }}
       >
-        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Create Account'}
+        {loading ? <Loader2 size={16} className="animate-spin" /> : 'Create Account'}
       </button>
     </form>
   );
 };
+
+export default RegisterForm;
