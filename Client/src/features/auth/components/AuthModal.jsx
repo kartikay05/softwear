@@ -50,7 +50,7 @@ export const AuthModal = ({ isOpen, onClose, initialView = 'login' }) => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 20 }}
             transition={{ type: 'spring', damping: 26, stiffness: 320 }}
-            className="relative z-10 w-full overflow-y-auto"
+            className="hide relative z-10 w-full overflow-y-auto"
             style={{
               maxWidth: '440px',
               maxHeight: 'calc(100vh - 1.5rem)',

@@ -648,3 +648,8 @@ input:-webkit-autofill:focus {
   50%       { opacity: 0.55; }
 }
 .animate-pulse-soft { animation: pulseSoft 2s ease-in-out infinite; }
+
+
+.hide::-webkit-scrollbar{
+  display: none;
+}
