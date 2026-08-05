@@ -181,7 +181,7 @@ export const CheckoutPage = () => {
   };
 
   return (
-    <div className="bg-white min-h-screen text-neutral-900 pb-20">
+    <div className="store-page checkout-page min-h-screen pb-20">
       {/* Header */}
       <section className="border-b border-neutral-100 py-12 bg-neutral-50/50">
         <div className="max-w-7xl mx-auto px-8">
@@ -189,7 +189,7 @@ export const CheckoutPage = () => {
             Checkout
           </h1>
           <p className="text-neutral-500 text-xs mt-1">
-            Specify shipping address and select checkout options
+            Review delivery details, choose payment, and place your order.
           </p>
         </div>
       </section>
@@ -202,7 +202,7 @@ export const CheckoutPage = () => {
             {/* Shipping Address Section */}
             <div className="space-y-6">
               <h3 className="text-xs uppercase tracking-widest font-semibold text-neutral-400 pb-2 border-b border-neutral-100">
-                1. Shipping Destination
+                1. Delivery address
               </h3>
 
               {/* Saved Addresses Selector */}
@@ -296,7 +296,7 @@ export const CheckoutPage = () => {
             {/* Payment Method Section */}
             <div className="space-y-6">
               <h3 className="text-xs uppercase tracking-widest font-semibold text-neutral-400 pb-2 border-b border-neutral-100">
-                2. Transaction Profile
+                2. Payment method
               </h3>
 
               <div className="flex flex-col sm:flex-row gap-4">
@@ -306,7 +306,7 @@ export const CheckoutPage = () => {
                   className={`flex-1 p-5 border text-left flex flex-col justify-between transition-all ${paymentMethod === "cod" ? 'border-neutral-900 bg-neutral-50' : 'border-neutral-200 hover:border-neutral-400'}`}
                 >
                   <span className="text-xs font-semibold uppercase tracking-wider">Cash on Delivery</span>
-                  <span className="text-xs text-neutral-400 mt-2">Pay in cash when order is inspected and delivered.</span>
+                  <span className="text-xs text-neutral-400 mt-2">Pay in cash when your order arrives.</span>
                 </button>
 
                 <button

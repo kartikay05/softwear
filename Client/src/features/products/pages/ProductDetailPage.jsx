@@ -74,7 +74,7 @@ export const ProductDetailPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="store-page min-h-screen flex items-center justify-center">
         <div className="flex gap-2">
           <div className="w-2 h-2 bg-neutral-900 rounded-full animate-bounce [animation-delay:-0.3s]" />
           <div className="w-2 h-2 bg-neutral-900 rounded-full animate-bounce [animation-delay:-0.15s]" />
@@ -86,11 +86,11 @@ export const ProductDetailPage = () => {
 
   if (error || !product) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-white px-6">
+      <div className="store-page min-h-screen flex flex-col items-center justify-center px-6">
         <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
         <h2 className="text-lg font-semibold mb-2">Product Not Found</h2>
         <p className="text-neutral-500 text-sm mb-6 text-center max-w-sm">The item may have been removed or does not exist.</p>
-        <Link to="/products" className="px-6 py-2.5 bg-neutral-900 text-white text-xs font-semibold tracking-widest uppercase">
+        <Link to="/products" className="btn btn-primary">
           Back to Catalog
         </Link>
       </div>
@@ -100,7 +100,7 @@ export const ProductDetailPage = () => {
   const sizes = ["S", "M", "L", "XL"];
 
   return (
-    <div className="bg-white min-h-screen text-neutral-900 pb-20">
+    <div className="store-page product-detail-page min-h-screen pb-20">
       {/* Breadcrumb */}
       <div className="max-w-7xl mx-auto px-8 py-6 text-xs text-neutral-400 flex items-center gap-2">
         <Link to="/" className="hover:text-neutral-900 transition-colors">Home</Link>
@@ -142,6 +142,8 @@ export const ProductDetailPage = () => {
                   key={idx}
                   onClick={() => setActiveImage(idx)}
                   className={`w-20 aspect-[3/4] shrink-0 border transition-all ${idx === activeImage ? 'border-neutral-900' : 'border-neutral-200'}`}
+                  aria-label={`View image ${idx + 1} of ${product.name}`}
+                  aria-pressed={idx === activeImage}
                 >
                   <img src={img.url} alt={`Thumbnail ${idx}`} className="w-full h-full object-cover" />
                 </button>
@@ -196,7 +198,7 @@ export const ProductDetailPage = () => {
           <div className="py-6 border-b border-neutral-100">
             <div className="flex justify-between items-baseline mb-3">
               <h3 className="text-xs uppercase tracking-wider font-semibold text-neutral-400">Select Profile / Size</h3>
-              <button className="text-neutral-400 hover:text-neutral-900 text-xs underline">Size Chart</button>
+              <button type="button" className="text-neutral-400 hover:text-neutral-900 text-xs underline">Size guide</button>
             </div>
             <div className="flex gap-3">
               {sizes.map((size) => (
@@ -219,6 +221,7 @@ export const ProductDetailPage = () => {
                 <button 
                   onClick={() => setQty(Math.max(1, qty - 1))}
                   className="px-4 py-3 text-neutral-500 hover:text-neutral-900 text-sm font-semibold"
+                  aria-label="Decrease quantity"
                 >
                   -
                 </button>
@@ -226,6 +229,7 @@ export const ProductDetailPage = () => {
                 <button 
                   onClick={() => setQty(qty + 1)}
                   className="px-4 py-3 text-neutral-500 hover:text-neutral-900 text-sm font-semibold"
+                  aria-label="Increase quantity"
                 >
                   +
                 </button>
@@ -245,6 +249,8 @@ export const ProductDetailPage = () => {
               <button
                 onClick={() => dispatch(toggleWishlist(product))}
                 className="p-4 border border-neutral-200 hover:border-neutral-900 transition-colors text-neutral-400 hover:text-neutral-900"
+                aria-label={isWishlisted(product._id) ? 'Remove from wishlist' : 'Add to wishlist'}
+                title={isWishlisted(product._id) ? 'Remove from wishlist' : 'Add to wishlist'}
               >
                 <Heart className={`w-4 h-4 ${isWishlisted(product._id) ? 'fill-red-500 text-red-500' : ''}`} />
               </button>
@@ -262,11 +268,11 @@ export const ProductDetailPage = () => {
         <div>
           <h2 className="text-xl font-semibold tracking-tight mb-2">Customer Feedback</h2>
           <p className="text-neutral-500 text-xs leading-relaxed mb-6">
-            Read comments left by buyers regarding fabric weave, drape, sizing accuracy, and structural lines.
+            Read what buyers say about the fabric, fit, and finish.
           </p>
 
           <form onSubmit={handleAddReview} className="space-y-4 bg-neutral-50 p-6 border border-neutral-100">
-            <h3 className="text-xs uppercase tracking-wider font-semibold text-neutral-600">Write an inspection</h3>
+            <h3 className="text-xs uppercase tracking-wider font-semibold text-neutral-600">Write a review</h3>
             
             <div className="space-y-1">
               <label className="text-[10px] uppercase tracking-wider text-neutral-400 font-semibold block">Rating</label>
@@ -289,7 +295,7 @@ export const ProductDetailPage = () => {
               <textarea
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Share your thoughts on weave, sizing..."
+                placeholder="How did the fit and fabric feel?"
                 rows="4"
                 className="w-full text-xs p-3 border border-neutral-200 focus:outline-none focus:border-neutral-900 bg-white"
                 required

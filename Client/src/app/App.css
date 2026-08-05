@@ -482,6 +482,54 @@ input:-webkit-autofill:focus {
   .section-lg { padding: 4rem 0; }
 }
 
+/* Storefront pages built before the shared system now inherit one visual language. */
+.store-page {
+  background: var(--color-background);
+  color: var(--color-on-surface);
+}
+.store-page .bg-white,
+.store-page .bg-neutral-50,
+.store-page .bg-neutral-50\/50 {
+  background-color: var(--color-surface-container-lowest);
+}
+.store-page .bg-neutral-200\/50 { background-color: var(--color-surface-container); }
+.store-page .text-neutral-900,
+.store-page .text-neutral-950,
+.store-page .text-neutral-800 { color: var(--color-on-surface); }
+.store-page .text-neutral-700,
+.store-page .text-neutral-600,
+.store-page .text-neutral-500 { color: var(--color-on-surface-variant); }
+.store-page .text-neutral-400 { color: var(--color-outline); }
+.store-page .border-neutral-100,
+.store-page .border-neutral-200 { border-color: var(--color-outline-variant); }
+.store-page .bg-neutral-900,
+.store-page .bg-neutral-950 { background-color: var(--color-primary-container); }
+.store-page .hover\:bg-neutral-800:hover,
+.store-page .hover\:bg-neutral-950:hover { background-color: var(--color-primary); }
+.store-page .hover\:border-neutral-900:hover,
+.store-page .focus\:border-neutral-900:focus { border-color: var(--color-primary-container); }
+.store-page .text-amber-500 { color: var(--color-primary-container); }
+.store-page .text-emerald-600 { color: var(--color-success); }
+.store-page input,
+.store-page textarea {
+  border-radius: var(--radius-sm);
+  color: var(--color-on-surface);
+  background: var(--color-surface-container-lowest);
+}
+.store-page button { border-radius: var(--radius-sm); }
+.checkout-page .max-w-7xl,
+.product-detail-page .max-w-7xl,
+.profile-page .max-w-7xl { max-width: 1280px; }
+.checkout-page .sticky { top: 5.5rem; }
+
+@media (max-width: 640px) {
+  .store-page .max-w-7xl { padding-left: 1.25rem; padding-right: 1.25rem; }
+  .product-detail-page .max-w-7xl { gap: 2.5rem; }
+  .product-detail-page .text-3xl { font-size: 2rem; line-height: 1.15; }
+  .checkout-page .grid-cols-2 { grid-template-columns: 1fr; }
+  .checkout-page .p-8 { padding: 1.25rem; }
+}
+
 /* ─── Modal Overlay ───────────────────────────────────────── */
 .modal-overlay {
   position: fixed;

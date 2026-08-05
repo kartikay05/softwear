@@ -69,7 +69,7 @@ export const ProfilePage = () => {
   };
 
   return (
-    <div className="bg-white min-h-screen text-neutral-900 pb-20">
+    <div className="store-page profile-page min-h-screen pb-20">
       {/* Header */}
       <section className="border-b border-neutral-100 py-12 bg-neutral-50/50">
         <div className="max-w-7xl mx-auto px-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">

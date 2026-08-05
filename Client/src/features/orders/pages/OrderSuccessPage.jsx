@@ -16,7 +16,7 @@ export const OrderSuccessPage = () => {
   }, [dispatch]);
 
   return (
-    <div className="bg-white min-h-screen text-neutral-900 flex flex-col items-center justify-center px-6 py-20">
+    <div className="store-page min-h-screen flex flex-col items-center justify-center px-6 py-20">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}

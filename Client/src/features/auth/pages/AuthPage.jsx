@@ -12,7 +12,7 @@ export const AuthPage = ({ initialView = 'login' }) => {
   }
 
   return (
-    <div className="min-h-[70vh] bg-neutral-50 flex flex-col items-center justify-center px-6 py-16">
+    <div className="store-page min-h-[70vh] flex flex-col items-center justify-center px-6 py-16">
       <div className="text-center mb-8">
         <div className="inline-flex items-center gap-2 text-neutral-900 mb-3">
           <Sparkles className="w-5 h-5" />
