@@ -90,7 +90,7 @@ const StorefrontLayout = ({ children }) => (
 
 // ── Router Content ───────────────────────────────────────────
 const AppContent = () => {
-  useTokenRefresh(5 * 60 * 1000);
+  useTokenRefresh(); // defaults to 14 min, just under the 15m access-token expiry
   const { loading } = useSelector((state) => state.auth);
   const location = useLocation();
 
