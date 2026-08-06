@@ -17,6 +17,10 @@ import userModel from "./models/user.model.js";
 
 const app = express();
 
+// Trust Render's (and other cloud hosts') reverse proxy so that
+// req.protocol returns 'https' and Passport builds correct callback URLs.
+app.set('trust proxy', 1);
+
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -36,7 +40,8 @@ if (config.GOOGLE_CLIENT_ID && config.GOOGLE_CLIENT_SECRET) {
         new GoogleStrategy({
             clientID: config.GOOGLE_CLIENT_ID,
             clientSecret: config.GOOGLE_CLIENT_SECRET,
-            callbackURL: '/api/auth/google/callback'
+            // Absolute URL avoids protocol guessing behind a reverse proxy
+            callbackURL: `${config.SERVER_URL}/api/auth/google/callback`,
         }, async (accessToken, refreshToken, profile, done) => {
 
             let user = await userModel.findOne({ email: profile.emails[0].value });
